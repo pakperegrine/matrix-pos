@@ -1,0 +1,163 @@
+<div class="product-management">
+  <div class="page-header">
+    <div class="header-left">
+      <h2 class="page-title">Product Management</h2>
+      <p class="page-subtitle">Manage your product catalog</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <span class="btn-icon">➕</span>
+      <span>Add Product</span>
+    </button>
+  </div>
+
+  <div class="table-section">
+    <app-table
+      [columns]="columns"
+      [data]="tableData"
+      [loading]="loading"
+      [selectable]="false"
+      (pageChange)="onPageChange($event)"
+      (sortChange)="onSort($event)"
+    ></app-table>
+  </div>
+
+  <!-- Product Create/Edit Modal -->
+  <app-modal
+    [isOpen]="showProductModal"
+    [title]="isEditMode ? 'Edit Product' : 'Create New Product'"
+    [size]="'lg'"
+    [closable]="!loading"
+    [showFooter]="false"
+    (close)="closeProductModal()"
+  >
+    <form class="product-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label required">Product Name</label>
+          <input 
+            type="text" 
+            class="form-input" 
+            [(ngModel)]="currentProduct.name"
+            name="name"
+            placeholder="Enter product name"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label class="form-label">SKU</label>
+          <input 
+            type="text" 
+            class="form-input" 
+            [(ngModel)]="currentProduct.sku"
+            name="sku"
+            placeholder="Enter SKU"
+          />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label required">Sale Price</label>
+          <input 
+            type="number" 
+            class="form-input" 
+            [(ngModel)]="currentProduct.price"
+            name="price"
+            placeholder="0.00"
+            step="0.01"
+            min="0"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cost Price</label>
+          <input 
+            type="number" 
+            class="form-input" 
+            [(ngModel)]="currentProduct.cost"
+            name="cost"
+            placeholder="0.00"
+            step="0.01"
+            min="0"
+          />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <input 
+            type="text" 
+            class="form-input" 
+            [(ngModel)]="currentProduct.category"
+            name="category"
+            placeholder="Enter category"
+          />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unit of Measure</label>
+          <select 
+            class="form-select" 
+            [(ngModel)]="currentProduct.unit_of_measure"
+            name="unit_of_measure"
+          >
+            <option value="pcs">Pieces (pcs)</option>
+            <option value="kg">Kilograms (kg)</option>
+            <option value="lbs">Pounds (lbs)</option>
+            <option value="box">Box</option>
+            <option value="dozen">Dozen</option>
+            <option value="case">Case</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="currentProduct.track_inventory"
+              name="track_inventory"
+            />
+            <span>Track Inventory</span>
+          </label>
+        </div>
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="currentProduct.is_active"
+              name="is_active"
+            />
+            <span>Active</span>
+          </label>
+        </div>
+      </div>
+    </form>
+
+    <div footer class="modal-footer-actions">
+      <button 
+        class="btn btn-secondary" 
+        (click)="closeProductModal()"
+        [disabled]="loading"
+      >
+        Cancel
+      </button>
+      <button 
+        *ngIf="isEditMode" 
+        class="btn btn-danger" 
+        (click)="deleteProduct(currentProduct)"
+        [disabled]="loading"
+      >
+        Delete
+      </button>
+      <button 
+        class="btn btn-primary" 
+        (click)="saveProduct()"
+        [disabled]="loading"
+      >
+        {{ isEditMode ? 'Update' : 'Create' }} Product
+      </button>
+    </div>
+  </app-modal>
+</div>

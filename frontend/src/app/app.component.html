@@ -10,11 +10,11 @@
     </div>
     
     <nav class="sidebar-nav">
-      <a href="#" class="nav-item active">
+      <a routerLink="/pos" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">🛒</span>
         <span class="nav-label">POS</span>
       </a>
-      <a href="#" class="nav-item">
+      <a routerLink="/products" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">📦</span>
         <span class="nav-label">Products</span>
       </a>
@@ -52,7 +52,7 @@
     <!-- Top Header Bar -->
     <header class="app-header">
       <div class="header-content">
-        <h2 class="page-title">Point of Sale</h2>
+        <h2 class="page-title">{{ pageTitle }}</h2>
         <div class="header-actions">
           <app-theme-toggle></app-theme-toggle>
           <button class="header-btn" title="Sync">
@@ -70,7 +70,7 @@
 
     <!-- Content -->
     <main class="content">
-      <app-pos></app-pos>
+      <router-outlet></router-outlet>
     </main>
 
     <!-- Footer -->

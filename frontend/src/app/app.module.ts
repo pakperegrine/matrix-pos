@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { PosComponent } from './components/pos/pos.component';
 import { PosProductCardComponent } from './components/pos-product-card/pos-product-card.component';
@@ -11,6 +12,7 @@ import { TableComponent } from './components/shared/table/table.component';
 import { ModalComponent } from './components/shared/modal/modal.component';
 import { ToastComponent } from './components/shared/toast/toast.component';
 import { ThemeToggleComponent } from './components/shared/theme-toggle/theme-toggle.component';
+import { ProductManagementComponent } from './components/product-management/product-management.component';
 
 @NgModule({
   declarations: [
@@ -22,12 +24,14 @@ import { ThemeToggleComponent } from './components/shared/theme-toggle/theme-tog
     TableComponent,
     ModalComponent,
     ToastComponent,
-    ThemeToggleComponent
+    ThemeToggleComponent,
+    ProductManagementComponent
   ],
   imports: [
     BrowserModule,
     FormsModule,
-    HttpClientModule
+    HttpClientModule,
+    AppRoutingModule
   ],
   providers: [],
   bootstrap: [AppComponent]
