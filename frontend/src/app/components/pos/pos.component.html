@@ -1,7 +1,10 @@
 <div class="pos-root">
-  <div style="display:flex; gap:24px;">
-    <div style="flex:2;">
-      <h4>Products</h4>
+  <div class="pos-layout">
+    <div class="products-section">
+      <div class="section-header">
+        <h3 class="section-title">Products</h3>
+        <div class="product-count">{{ products.length }} items</div>
+      </div>
       <app-pos-grid>
         <app-pos-product-card
           *ngFor="let p of products"
@@ -12,12 +15,88 @@
       </app-pos-grid>
     </div>
 
-    <div style="flex:1;">
-      <app-cart-panel [cart]="cart" [total]="total"></app-cart-panel>
-      <button (click)="syncOfflineSale()" class="sync-button">
-        <span class="button-icon">🔄</span>
-        <span>Sync Offline Sale</span>
-      </button>
+    <div class="cart-section">
+      <app-cart-panel 
+        [cart]="cart" 
+        [total]="total"
+        (updateQuantity)="updateQuantity($event)"
+        (removeItem)="removeItem($event)"
+        (checkout)="openCheckout()"
+        (clearCart)="clearCart()"
+      ></app-cart-panel>
     </div>
   </div>
+
+  <!-- Checkout Modal -->
+  <app-modal
+    [isOpen]="showCheckoutModal"
+    [title]="'Checkout'"
+    [size]="'md'"
+    [closable]="!processingCheckout"
+    [showFooter]="false"
+    (close)="closeCheckout()"
+  >
+    <div class="checkout-content">
+      <div class="checkout-summary">
+        <h4>Order Summary</h4>
+        <div class="summary-items">
+          <div *ngFor="let item of cart" class="summary-item">
+            <span>{{ item.product.name }} x{{ item.qty }}</span>
+            <span>{{ (item.product.price * item.qty) | currency }}</span>
+          </div>
+        </div>
+        <div class="summary-total">
+          <span>Total:</span>
+          <span class="total-value">{{ total | currency }}</span>
+        </div>
+      </div>
+
+      <div class="payment-section">
+        <h4>Payment Method</h4>
+        <div class="payment-methods">
+          <label class="payment-option">
+            <input type="radio" name="payment" value="cash" [(ngModel)]="paymentMethod" />
+            <span class="option-label">💵 Cash</span>
+          </label>
+          <label class="payment-option">
+            <input type="radio" name="payment" value="card" [(ngModel)]="paymentMethod" />
+            <span class="option-label">💳 Card</span>
+          </label>
+        </div>
+
+        <div *ngIf="paymentMethod === 'cash'" class="cash-payment">
+          <label class="input-label">Amount Paid:</label>
+          <input 
+            type="number" 
+            class="amount-input" 
+            [(ngModel)]="amountPaid"
+            [min]="total"
+            step="0.01"
+          />
+          <div class="change-display" *ngIf="amountPaid >= total">
+            <span>Change:</span>
+            <span class="change-value">{{ change | currency }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="checkout-actions">
+        <button 
+          class="btn btn-secondary" 
+          (click)="closeCheckout()"
+          [disabled]="processingCheckout"
+        >
+          Cancel
+        </button>
+        <button 
+          class="btn btn-primary btn-complete" 
+          (click)="processCheckout()"
+          [disabled]="processingCheckout || (paymentMethod === 'cash' && amountPaid < total)"
+        >
+          <span *ngIf="!processingCheckout">Complete Sale</span>
+          <span *ngIf="processingCheckout">Processing...</span>
+        </button>
+      </div>
+    </div>
+  </app-modal>
 </div>

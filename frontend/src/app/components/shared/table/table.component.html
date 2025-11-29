@@ -1,0 +1,76 @@
+<div class="table-container">
+  <div class="table-wrapper" [class.loading]="loading">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th *ngIf="selectable" class="select-column">
+            <input type="checkbox" />
+          </th>
+          <th *ngFor="let column of columns" 
+              [class.sortable]="column.sortable"
+              (click)="onSort(column)">
+            <div class="th-content">
+              <span>{{ column.label }}</span>
+              <span *ngIf="column.sortable && sortColumn === column.key" class="sort-icon">
+                {{ sortDirection === 'asc' ? '↑' : '↓' }}
+              </span>
+            </div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="loading" class="loading-row">
+          <td [attr.colspan]="columns.length + (selectable ? 1 : 0)">
+            <div class="loader">Loading...</div>
+          </td>
+        </tr>
+        <tr *ngIf="!loading && data.data.length === 0" class="empty-row">
+          <td [attr.colspan]="columns.length + (selectable ? 1 : 0)">
+            <div class="empty-state">No data available</div>
+          </td>
+        </tr>
+        <tr *ngFor="let row of data.data" 
+            (click)="onRowClick(row)"
+            [class.selected]="isRowSelected(row)"
+            [class.clickable]="selectable">
+          <td *ngIf="selectable" class="select-column">
+            <input type="checkbox" [checked]="isRowSelected(row)" />
+          </td>
+          <td *ngFor="let column of columns">
+            {{ getCellValue(row, column) }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" *ngIf="data.total > 0">
+    <div class="pagination-info">
+      Showing {{ (data.page - 1) * data.perPage + 1 }} to 
+      {{ Math.min(data.page * data.perPage, data.total) }} of {{ data.total }} entries
+    </div>
+    <div class="pagination-controls">
+      <button 
+        class="page-btn" 
+        [disabled]="data.page === 1"
+        (click)="onPageChange(data.page - 1)">
+        Previous
+      </button>
+      <button 
+        *ngFor="let page of pages"
+        class="page-btn"
+        [class.active]="page === data.page"
+        [class.dots]="page === -1"
+        [disabled]="page === -1"
+        (click)="onPageChange(page)">
+        {{ page === -1 ? '...' : page }}
+      </button>
+      <button 
+        class="page-btn" 
+        [disabled]="data.page === totalPages"
+        (click)="onPageChange(data.page + 1)">
+        Next
+      </button>
+    </div>
+  </div>
+</div>

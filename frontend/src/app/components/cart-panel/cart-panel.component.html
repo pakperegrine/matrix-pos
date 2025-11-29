@@ -1,16 +1,52 @@
 <div class="cart-panel">
-  <h4>Cart</h4>
-  <div *ngIf="cart.length === 0" class="empty">Cart is empty</div>
-  <div *ngFor="let c of cart" class="cart-item">
-    <div class="item-info">
-      <div class="item-name">{{ c.product.name }}</div>
-      <div class="item-qty">Qty: {{ c.qty }}</div>
-    </div>
-    <div class="item-price">{{ (c.product.price * c.qty) | currency }}</div>
+  <div class="cart-header">
+    <h4>Shopping Cart</h4>
+    <button *ngIf="cart.length > 0" class="clear-btn" (click)="onClearCart()" title="Clear cart">
+      🗑️
+    </button>
   </div>
-  <hr />
-  <div class="total-row">
-    <strong>Total:</strong>
-    <strong>{{ total | currency }}</strong>
+  
+  <div *ngIf="cart.length === 0" class="empty">
+    <div class="empty-icon">🛒</div>
+    <div class="empty-text">Cart is empty</div>
+    <div class="empty-subtext">Add items to start a sale</div>
+  </div>
+  
+  <div class="cart-items" *ngIf="cart.length > 0">
+    <div *ngFor="let c of cart" class="cart-item">
+      <div class="item-details">
+        <div class="item-name">{{ c.product.name }}</div>
+        <div class="item-price">{{ c.product.price | currency }}</div>
+      </div>
+      <div class="item-controls">
+        <div class="qty-controls">
+          <button class="qty-btn" (click)="decreaseQty(c)">−</button>
+          <span class="qty-value">{{ c.qty }}</span>
+          <button class="qty-btn" (click)="increaseQty(c)">+</button>
+        </div>
+        <div class="item-total">{{ (c.product.price * c.qty) | currency }}</div>
+        <button class="remove-btn" (click)="onRemoveItem(c)" title="Remove item">×</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="cart-footer" *ngIf="cart.length > 0">
+    <div class="subtotal-row">
+      <span>Subtotal:</span>
+      <span>{{ total | currency }}</span>
+    </div>
+    <div class="tax-row">
+      <span>Tax (0%):</span>
+      <span>{{ 0 | currency }}</span>
+    </div>
+    <hr />
+    <div class="total-row">
+      <strong>Total:</strong>
+      <strong class="total-amount">{{ total | currency }}</strong>
+    </div>
+    <button class="checkout-btn" (click)="onCheckout()">
+      <span class="btn-icon">💳</span>
+      <span>Checkout</span>
+    </button>
   </div>
 </div>
