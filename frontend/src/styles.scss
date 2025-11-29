@@ -1,0 +1,28 @@
+/* Basic styles for POS demo */
+:root {
+  --primary: #0d6efd;
+  --bg: #f8f9fa;
+}
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  margin: 0;
+  background: var(--bg);
+}
+
+.app-shell {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 240px;
+  background: white;
+  border-right: 1px solid #eaeaea;
+  padding: 12px;
+}
+
+.content {
+  flex: 1;
+  padding: 12px;
+}

@@ -1,0 +1,16 @@
+<div class="cart-panel">
+  <h4>Cart</h4>
+  <div *ngIf="cart.length === 0" class="empty">Cart is empty</div>
+  <div *ngFor="let c of cart" class="cart-item">
+    <div class="item-info">
+      <div class="item-name">{{ c.product.name }}</div>
+      <div class="item-qty">Qty: {{ c.qty }}</div>
+    </div>
+    <div class="item-price">{{ (c.product.price * c.qty) | currency }}</div>
+  </div>
+  <hr />
+  <div class="total-row">
+    <strong>Total:</strong>
+    <strong>{{ total | currency }}</strong>
+  </div>
+</div>

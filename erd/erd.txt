@@ -1,0 +1,54 @@
+
+Entity Relationship Diagram (ASCII) - SaaS POS (abridged)
+
+NOTE: UUID PKs for critical tables. All tenant data includes business_id.
+
+[users]                  [roles]               [role_permissions]
+id (PK, UUID)            id (PK, UUID)         id (PK)
+business_id              business_id           role_id (FK)
+name                     name                  permission_key
+email                    ...                   ...
+
+[businesses]             [locations]           [location_settings]
+id (PK, UUID)            id (PK, UUID)         id
+owner_id (FK users)      business_id (FK)      location_id (FK)
+name                     code (LHR)            enable_tax
+...                      address               tax_rate
+                                                print_mode
+
+[products]               [stock_batches]       [stock_movements]
+id (PK, UUID)            id (PK, UUID)         id (PK, UUID)
+business_id              product_id (FK)       batch_id (FK nullable)
+scope (central|local)    location_id           product_id
+location_id (nullable)   quantity              location_id
+name                     cost_price            type (sale|purchase|adjust)
+sku                      created_at            quantity
+
+
+[sale_invoices]          [sale_items]          [payments]
+id (PK, UUID)            id (PK, UUID)         id (PK, UUID)
+business_id              invoice_id (FK)       invoice_id (FK)
+location_id              product_id            method (cash|card)
+invoice_no (display)     quantity              amount
+total                    sale_price            reference
+total_cost               fifo_cost             created_at
+total_profit             profit
+
+[customers]
+id (PK, UUID)
+business_id
+name
+phone
+total_spent
+
+Relationships summary:
+- business 1..* locations
+- business 1..* users
+- role 1..* role_permissions
+- business 1..* products
+- product 1..* stock_batches (FIFO)
+- stock_batches 1..* stock_movements
+- sale_invoices 1..* sale_items
+- sale_invoices 1..* payments
+- customers 1..* sale_invoices (customer_id nullable)
+

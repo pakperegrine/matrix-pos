@@ -1,0 +1,20 @@
+<div class="pos-root">
+  <div style="display:flex; gap:20px;">
+    <div style="flex:2;">
+      <h4>Products</h4>
+      <app-pos-grid>
+        <app-pos-product-card
+          *ngFor="let p of products"
+          [product]="p"
+          (click)="addToCart(p)"
+          style="cursor:pointer"
+        ></app-pos-product-card>
+      </app-pos-grid>
+    </div>
+
+    <div style="flex:1;">
+      <app-cart-panel [cart]="cart" [total]="total"></app-cart-panel>
+      <button (click)="syncOfflineSale()" style="margin-top:12px; width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600;">Sync Offline Sale</button>
+    </div>
+  </div>
+</div>

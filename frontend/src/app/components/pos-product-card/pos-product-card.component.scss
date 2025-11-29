@@ -1,0 +1,29 @@
+.product-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .product-name {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .product-sku {
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 8px;
+  }
+
+  .product-price {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary);
+  }
+}

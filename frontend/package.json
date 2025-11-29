@@ -1,0 +1,28 @@
+{
+  "name": "matrix-pos-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "npx ng serve --open",
+    "build": "npx ng build",
+    "test": "npx ng test"
+  },
+  "dependencies": {
+    "@angular/animations": "^16.2.0",
+    "@angular/common": "^16.2.0",
+    "@angular/compiler": "^16.2.0",
+    "@angular/core": "^16.2.0",
+    "@angular/forms": "^16.2.0",
+    "@angular/platform-browser": "^16.2.0",
+    "@angular/platform-browser-dynamic": "^16.2.0",
+    "rxjs": "^7.8.0",
+    "zone.js": "^0.13.0",
+    "dexie": "^4.1.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.1.0",
+    "@angular/cli": "^16.2.0",
+    "@angular/compiler-cli": "^16.2.0",
+    "@angular-devkit/build-angular": "^16.2.0"
+  }
+}
