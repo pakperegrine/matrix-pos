@@ -20,7 +20,7 @@
             "outputPath": "dist/frontend",
             "index": "src/index.html",
             "main": "src/main.ts",
-            "polyfills": [],
+            "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.json",
             "assets": [],
             "styles": ["src/styles.scss"],
