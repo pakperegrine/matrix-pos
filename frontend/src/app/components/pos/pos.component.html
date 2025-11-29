@@ -1,5 +1,5 @@
 <div class="pos-root">
-  <div style="display:flex; gap:20px;">
+  <div style="display:flex; gap:24px;">
     <div style="flex:2;">
       <h4>Products</h4>
       <app-pos-grid>
@@ -14,7 +14,10 @@
 
     <div style="flex:1;">
       <app-cart-panel [cart]="cart" [total]="total"></app-cart-panel>
-      <button (click)="syncOfflineSale()" style="margin-top:12px; width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600;">Sync Offline Sale</button>
+      <button (click)="syncOfflineSale()" class="sync-button">
+        <span class="button-icon">🔄</span>
+        <span>Sync Offline Sale</span>
+      </button>
     </div>
   </div>
 </div>

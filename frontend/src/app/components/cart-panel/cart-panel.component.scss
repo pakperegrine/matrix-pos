@@ -1,46 +1,90 @@
 .cart-panel {
-  background: white;
-  border-radius: 6px;
-  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  border: 2px solid var(--border-color);
 
   h4 {
-    margin: 0 0 12px 0;
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    &:before {
+      content: '🛒';
+      font-size: 1.5rem;
+    }
   }
 
   .empty {
-    color: #999;
-    font-size: 14px;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    text-align: center;
+    padding: 2rem 1rem;
+    background: var(--bg-primary);
+    border-radius: 8px;
+    border: 2px dashed var(--border-color);
   }
 
   .cart-item {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    border-radius: 8px;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(102, 126, 234, 0.05);
+      transform: translateX(4px);
+    }
 
     .item-info {
       flex: 1;
     }
 
     .item-name {
-      font-weight: 500;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
     }
 
     .item-qty {
-      font-size: 12px;
-      color: #666;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      background: var(--bg-secondary);
+      padding: 0.125rem 0.5rem;
+      border-radius: 12px;
+      display: inline-block;
     }
 
     .item-price {
-      font-weight: 600;
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 1.125rem;
     }
   }
 
   .total-row {
     display: flex;
     justify-content: space-between;
-    font-size: 18px;
-    margin-top: 12px;
+    font-size: 1.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--primary-light);
+    color: var(--text-primary);
+    
+    strong:last-child {
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
   }
 }
