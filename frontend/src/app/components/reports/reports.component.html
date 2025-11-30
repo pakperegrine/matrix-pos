@@ -1,0 +1,452 @@
+<div class="reports-container">
+  <div class="reports-header">
+    <h1>📊 Advanced Reports & Analytics</h1>
+    <p class="subtitle">Comprehensive business insights and performance metrics</p>
+  </div>
+
+  <!-- Date Range Filter -->
+  <div class="date-filter-section">
+    <div class="filter-row">
+      <div class="preset-buttons">
+        <button 
+          *ngFor="let preset of ['today', 'week', 'month', 'quarter', 'year']"
+          [class.active]="datePreset === preset"
+          (click)="setDatePreset(preset)">
+          {{ preset | titlecase }}
+        </button>
+      </div>
+      
+      <div class="custom-date-range">
+        <input 
+          type="date" 
+          [(ngModel)]="startDate" 
+          (change)="onDateChange()"
+          placeholder="Start Date">
+        <span class="date-separator">to</span>
+        <input 
+          type="date" 
+          [(ngModel)]="endDate" 
+          (change)="onDateChange()"
+          placeholder="End Date">
+      </div>
+
+      <button class="refresh-btn" (click)="loadAllReports()">
+        🔄 Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tabs-navigation">
+    <button 
+      [class.active]="activeTab === 'overview'" 
+      (click)="activeTab = 'overview'">
+      📈 Overview
+    </button>
+    <button 
+      [class.active]="activeTab === 'sales'" 
+      (click)="activeTab = 'sales'">
+      💰 Sales Analysis
+    </button>
+    <button 
+      [class.active]="activeTab === 'products'" 
+      (click)="activeTab = 'products'">
+      📦 Product Performance
+    </button>
+    <button 
+      [class.active]="activeTab === 'profit'" 
+      (click)="activeTab = 'profit'">
+      💵 Profit Analysis
+    </button>
+    <button 
+      [class.active]="activeTab === 'customers'" 
+      (click)="activeTab = 'customers'">
+      👥 Customer Insights
+    </button>
+  </div>
+
+  <!-- Overview Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'overview'">
+    <!-- KPI Cards -->
+    <div class="kpi-grid" *ngIf="salesSummary && !loadingSummary">
+      <div class="kpi-card revenue">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-content">
+          <div class="kpi-label">Total Revenue</div>
+          <div class="kpi-value">{{ formatCurrency(salesSummary.current_period.total_revenue) }}</div>
+          <div class="kpi-growth" [ngClass]="getGrowthClass(salesSummary.growth.revenue_growth)">
+            {{ getGrowthIcon(salesSummary.growth.revenue_growth) }} {{ formatPercent(salesSummary.growth.revenue_growth) }}
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-card transactions">
+        <div class="kpi-icon">🧾</div>
+        <div class="kpi-content">
+          <div class="kpi-label">Transactions</div>
+          <div class="kpi-value">{{ formatNumber(salesSummary.current_period.total_invoices) }}</div>
+          <div class="kpi-growth" [ngClass]="getGrowthClass(salesSummary.growth.invoices_growth)">
+            {{ getGrowthIcon(salesSummary.growth.invoices_growth) }} {{ formatPercent(salesSummary.growth.invoices_growth) }}
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-card items">
+        <div class="kpi-icon">📦</div>
+        <div class="kpi-content">
+          <div class="kpi-label">Items Sold</div>
+          <div class="kpi-value">{{ formatNumber(salesSummary.current_period.total_items_sold) }}</div>
+          <div class="kpi-growth" [ngClass]="getGrowthClass(salesSummary.growth.items_growth)">
+            {{ getGrowthIcon(salesSummary.growth.items_growth) }} {{ formatPercent(salesSummary.growth.items_growth) }}
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-card avg-order">
+        <div class="kpi-icon">📊</div>
+        <div class="kpi-content">
+          <div class="kpi-label">Avg Order Value</div>
+          <div class="kpi-value">{{ formatCurrency(salesSummary.current_period.avg_order_value) }}</div>
+          <div class="kpi-info">Per transaction</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="loading-state" *ngIf="loadingSummary">
+      Loading summary data...
+    </div>
+
+    <!-- Quick Stats Grid -->
+    <div class="quick-stats-grid">
+      <!-- Profit Summary -->
+      <div class="stat-card" *ngIf="profitAnalysis && !loadingProfit">
+        <h3>💵 Profit Summary</h3>
+        <div class="stat-row">
+          <span class="stat-label">Gross Profit:</span>
+          <span class="stat-value profit">{{ formatCurrency(profitAnalysis.gross_profit) }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Profit Margin:</span>
+          <span class="stat-value">{{ formatPercent(profitAnalysis.profit_margin) }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Total Cost:</span>
+          <span class="stat-value">{{ formatCurrency(profitAnalysis.total_cost) }}</span>
+        </div>
+      </div>
+
+      <!-- Customer Summary -->
+      <div class="stat-card" *ngIf="customerInsights && !loadingCustomers">
+        <h3>👥 Customer Summary</h3>
+        <div class="stat-row">
+          <span class="stat-label">Total Customers:</span>
+          <span class="stat-value">{{ formatNumber(customerInsights.total_customers) }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Active Customers:</span>
+          <span class="stat-value">{{ formatNumber(customerInsights.active_customers) }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Retention Rate:</span>
+          <span class="stat-value">{{ formatPercent(customerInsights.customer_retention_rate) }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Avg Customer Value:</span>
+          <span class="stat-value">{{ formatCurrency(customerInsights.avg_customer_value) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Methods Chart -->
+    <div class="chart-section" *ngIf="paymentMethodStats && !loadingPayments">
+      <h3>💳 Payment Methods Distribution</h3>
+      <div class="payment-methods-grid">
+        <div class="payment-method-card" *ngFor="let pm of paymentMethodStats.payment_methods">
+          <div class="pm-header">
+            <span class="pm-name">{{ pm.payment_method | titlecase }}</span>
+            <span class="pm-percentage">{{ formatPercent(pm.percentage) }}</span>
+          </div>
+          <div class="pm-progress">
+            <div class="pm-bar" [style.width.%]="pm.percentage"></div>
+          </div>
+          <div class="pm-stats">
+            <div class="pm-stat">
+              <span class="label">Transactions:</span>
+              <span class="value">{{ formatNumber(pm.transaction_count) }}</span>
+            </div>
+            <div class="pm-stat">
+              <span class="label">Total:</span>
+              <span class="value">{{ formatCurrency(pm.total_amount) }}</span>
+            </div>
+            <div class="pm-stat">
+              <span class="label">Average:</span>
+              <span class="value">{{ formatCurrency(pm.avg_amount) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sales Analysis Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'sales'">
+    <div class="chart-controls">
+      <label>Group By:</label>
+      <select [(ngModel)]="chartType" (change)="onChartTypeChange()">
+        <option value="hour">Hour</option>
+        <option value="day">Day</option>
+        <option value="week">Week</option>
+        <option value="month">Month</option>
+        <option value="year">Year</option>
+      </select>
+      
+      <button class="export-btn" (click)="exportReport('sales_summary', 'csv')" [disabled]="exportingReport">
+        📥 Export CSV
+      </button>
+      <button class="export-btn" (click)="exportReport('sales_summary', 'pdf')" [disabled]="exportingReport">
+        📄 Export PDF
+      </button>
+    </div>
+
+    <div class="sales-chart-container" *ngIf="salesByPeriod && !loadingChart">
+      <h3>Sales Trend - {{ chartType | titlecase }}</h3>
+      <div class="chart-wrapper">
+        <div class="simple-bar-chart">
+          <div class="chart-bars">
+            <div 
+              class="bar-group" 
+              *ngFor="let item of salesByPeriod.data"
+              [title]="'Period: ' + item.period + '\nRevenue: ' + formatCurrency(item.total_revenue)">
+              <div class="bar-container">
+                <div 
+                  class="bar" 
+                  [style.height.%]="(item.total_revenue / getMaxRevenue(salesByPeriod.data)) * 100">
+                </div>
+              </div>
+              <div class="bar-label">{{ formatPeriodLabel(item.period) }}</div>
+              <div class="bar-value">{{ formatCurrency(item.total_revenue) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sales Data Table -->
+      <div class="data-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Period</th>
+              <th>Transactions</th>
+              <th>Revenue</th>
+              <th>Discounts</th>
+              <th>Avg Order</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of salesByPeriod.data">
+              <td>{{ item.period }}</td>
+              <td>{{ formatNumber(item.invoice_count) }}</td>
+              <td>{{ formatCurrency(item.total_revenue) }}</td>
+              <td>{{ formatCurrency(item.total_discount) }}</td>
+              <td>{{ formatCurrency(item.avg_order_value) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="loading-state" *ngIf="loadingChart">
+      Loading sales chart...
+    </div>
+  </div>
+
+  <!-- Product Performance Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'products'">
+    <div class="tab-header">
+      <h2>📦 Top Product Performance</h2>
+      <button class="export-btn" (click)="exportReport('product_performance', 'csv')" [disabled]="exportingReport">
+        📥 Export
+      </button>
+    </div>
+
+    <div class="products-table" *ngIf="productPerformance && !loadingProducts">
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Quantity Sold</th>
+            <th>Revenue</th>
+            <th>Orders</th>
+            <th>Avg Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let product of productPerformance.top_products">
+            <td class="rank">
+              <span class="rank-badge" [class.top3]="product.rank <= 3">
+                #{{ product.rank }}
+              </span>
+            </td>
+            <td class="product-name">{{ product.product_name }}</td>
+            <td>{{ product.category }}</td>
+            <td class="number">{{ formatNumber(product.total_quantity) }}</td>
+            <td class="currency">{{ formatCurrency(product.total_revenue) }}</td>
+            <td class="number">{{ formatNumber(product.order_count) }}</td>
+            <td class="currency">{{ formatCurrency(product.avg_price) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="loading-state" *ngIf="loadingProducts">
+      Loading product data...
+    </div>
+  </div>
+
+  <!-- Profit Analysis Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'profit'">
+    <div class="tab-header">
+      <h2>💵 Profit & Margin Analysis</h2>
+      <button class="export-btn" (click)="exportReport('profit_analysis', 'csv')" [disabled]="exportingReport">
+        📥 Export
+      </button>
+    </div>
+
+    <div class="profit-details" *ngIf="profitAnalysis && !loadingProfit">
+      <div class="profit-summary-grid">
+        <div class="profit-card total-revenue">
+          <h4>Total Revenue</h4>
+          <div class="amount">{{ formatCurrency(profitAnalysis.total_revenue) }}</div>
+          <div class="description">Gross sales amount</div>
+        </div>
+
+        <div class="profit-card total-cost">
+          <h4>Total Cost</h4>
+          <div class="amount">{{ formatCurrency(profitAnalysis.total_cost) }}</div>
+          <div class="description">Cost of goods sold</div>
+        </div>
+
+        <div class="profit-card gross-profit">
+          <h4>Gross Profit</h4>
+          <div class="amount positive">{{ formatCurrency(profitAnalysis.gross_profit) }}</div>
+          <div class="description">Revenue - Cost</div>
+        </div>
+
+        <div class="profit-card profit-margin">
+          <h4>Profit Margin</h4>
+          <div class="amount">{{ formatPercent(profitAnalysis.profit_margin) }}</div>
+          <div class="description">Profitability ratio</div>
+        </div>
+      </div>
+
+      <div class="profit-visual">
+        <h3>Revenue Breakdown</h3>
+        <div class="profit-bar">
+          <div 
+            class="profit-segment revenue" 
+            [style.width.%]="100"
+            [title]="'Total Revenue: ' + formatCurrency(profitAnalysis.total_revenue)">
+            Revenue
+          </div>
+        </div>
+        <div class="profit-bar">
+          <div 
+            class="profit-segment cost" 
+            [style.width.%]="(profitAnalysis.total_cost / profitAnalysis.total_revenue) * 100"
+            [title]="'Total Cost: ' + formatCurrency(profitAnalysis.total_cost)">
+            Cost
+          </div>
+          <div 
+            class="profit-segment profit" 
+            [style.width.%]="(profitAnalysis.gross_profit / profitAnalysis.total_revenue) * 100"
+            [title]="'Gross Profit: ' + formatCurrency(profitAnalysis.gross_profit)">
+            Profit
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="loading-state" *ngIf="loadingProfit">
+      Loading profit data...
+    </div>
+  </div>
+
+  <!-- Customer Insights Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'customers'">
+    <div class="tab-header">
+      <h2>👥 Customer Insights & Behavior</h2>
+      <button class="export-btn" (click)="exportReport('customer_insights', 'csv')" [disabled]="exportingReport">
+        📥 Export
+      </button>
+    </div>
+
+    <div class="customer-metrics" *ngIf="customerInsights && !loadingCustomers">
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon">👥</div>
+          <div class="metric-value">{{ formatNumber(customerInsights.total_customers) }}</div>
+          <div class="metric-label">Total Customers</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon">🎯</div>
+          <div class="metric-value">{{ formatNumber(customerInsights.active_customers) }}</div>
+          <div class="metric-label">Active Customers</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon">🔄</div>
+          <div class="metric-value">{{ formatNumber(customerInsights.repeat_customers) }}</div>
+          <div class="metric-label">Repeat Customers</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon">📊</div>
+          <div class="metric-value">{{ formatPercent(customerInsights.customer_retention_rate) }}</div>
+          <div class="metric-label">Retention Rate</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon">💰</div>
+          <div class="metric-value">{{ formatCurrency(customerInsights.avg_customer_value) }}</div>
+          <div class="metric-label">Avg Customer Value</div>
+        </div>
+      </div>
+
+      <div class="customer-analysis">
+        <h3>Customer Behavior Analysis</h3>
+        <div class="analysis-item">
+          <span class="analysis-label">Customer Engagement:</span>
+          <div class="analysis-bar">
+            <div 
+              class="analysis-fill" 
+              [style.width.%]="(customerInsights.active_customers / customerInsights.total_customers) * 100">
+            </div>
+          </div>
+          <span class="analysis-value">
+            {{ formatPercent((customerInsights.active_customers / customerInsights.total_customers) * 100) }}
+          </span>
+        </div>
+
+        <div class="analysis-item">
+          <span class="analysis-label">Repeat Purchase Rate:</span>
+          <div class="analysis-bar">
+            <div 
+              class="analysis-fill repeat" 
+              [style.width.%]="customerInsights.customer_retention_rate">
+            </div>
+          </div>
+          <span class="analysis-value">
+            {{ formatPercent(customerInsights.customer_retention_rate) }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="loading-state" *ngIf="loadingCustomers">
+      Loading customer data...
+    </div>
+  </div>
+</div>

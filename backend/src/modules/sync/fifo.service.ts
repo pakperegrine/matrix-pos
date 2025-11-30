@@ -13,23 +13,29 @@ export interface FifoCostResult {
 export class FifoService {
   constructor(@InjectRepository(StockBatch) private batches: Repository<StockBatch>) {}
 
-  async calculateFifoCost(productId: string, locationId: string, qty: number): Promise<FifoCostResult> {
+  async calculateFifoCost(productId: string, locationId: string | null, qty: number): Promise<FifoCostResult> {
+    const whereCondition: any = { product_id: productId };
+    if (locationId) {
+      whereCondition.location_id = locationId;
+    }
+    
     const batches = await this.batches.find({
-      where: { product_id: productId, location_id: locationId },
+      where: whereCondition,
       order: { created_at: 'ASC' }
     });
 
-    let remaining = qty;
+    let remaining = Number(qty) || 0;
     let totalCost = 0;
     const used: Array<{ batch_id: string; qty: number }> = [];
 
     for (const batch of batches) {
       if (remaining <= 0) break;
-      const available = batch.quantity;
+      const available = Number(batch.quantity) || 0;
       if (available <= 0) continue;
 
       const take = Math.min(available, remaining);
-      totalCost += take * (batch.cost_price || 0);
+      const costPrice = Number(batch.cost_price) || 0;
+      totalCost += take * costPrice;
       used.push({ batch_id: batch.id, qty: take });
       remaining -= take;
 

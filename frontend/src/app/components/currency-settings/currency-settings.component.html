@@ -1,0 +1,180 @@
+<div class="currency-settings-container">
+  <div class="page-header">
+    <div class="header-left">
+      <h1>💱 Currency Management</h1>
+      <p class="subtitle">Manage currencies and exchange rates</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary" (click)="toggleCalculator()">
+        🧮 {{ showCalculator ? 'Hide' : 'Show' }} Calculator
+      </button>
+      <button class="btn-secondary" (click)="refreshRates()" [disabled]="refreshing">
+        {{ refreshing ? '⏳ Refreshing...' : '🔄 Refresh Rates' }}
+      </button>
+      <button class="btn-primary" (click)="openForm()">
+        ➕ Add Currency
+      </button>
+    </div>
+  </div>
+
+  <!-- Currency Converter -->
+  <div class="converter-panel" *ngIf="showCalculator">
+    <h3>💹 Currency Converter</h3>
+    <div class="converter-form">
+      <div class="converter-row">
+        <div class="form-group">
+          <label>Amount</label>
+          <input type="number" [(ngModel)]="conversionAmount" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>From</label>
+          <select [(ngModel)]="conversionFrom">
+            <option *ngFor="let curr of currencies" [value]="curr.code">
+              {{ curr.code }} - {{ curr.name }}
+            </option>
+          </select>
+        </div>
+        <div class="converter-arrow">→</div>
+        <div class="form-group">
+          <label>To</label>
+          <select [(ngModel)]="conversionTo">
+            <option *ngFor="let curr of currencies" [value]="curr.code">
+              {{ curr.code }} - {{ curr.name }}
+            </option>
+          </select>
+        </div>
+        <button class="btn-convert" (click)="convertCurrency()">Convert</button>
+      </div>
+    </div>
+    <div class="conversion-result" *ngIf="conversionResult">
+      <div class="result-box">
+        <div class="result-label">Result</div>
+        <div class="result-value">
+          {{ conversionResult.from_amount }} {{ conversionResult.from_currency }} = 
+          <strong>{{ conversionResult.to_amount.toFixed(2) }} {{ conversionResult.to_currency }}</strong>
+        </div>
+        <div class="result-rate">
+          Exchange Rate: 1 {{ conversionResult.from_currency }} = {{ conversionResult.exchange_rate.toFixed(6) }} {{ conversionResult.to_currency }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Base Currency Info -->
+  <div class="base-currency-card" *ngIf="baseCurrency">
+    <div class="card-icon">⭐</div>
+    <div class="card-content">
+      <div class="card-label">Base Currency</div>
+      <div class="card-value">{{ baseCurrency.code }} - {{ baseCurrency.name }}</div>
+      <div class="card-note">All exchange rates are relative to this currency</div>
+    </div>
+  </div>
+
+  <!-- Currencies List -->
+  <div class="currencies-grid" *ngIf="!loading">
+    <div class="currency-card" *ngFor="let currency of currencies" [class.base]="currency.is_base">
+      <div class="card-header">
+        <div class="currency-info">
+          <div class="currency-symbol">{{ currency.symbol }}</div>
+          <div class="currency-details">
+            <div class="currency-code">{{ currency.code }}</div>
+            <div class="currency-name">{{ currency.name }}</div>
+          </div>
+        </div>
+        <div class="currency-badges">
+          <span class="badge base" *ngIf="currency.is_base">BASE</span>
+          <span class="badge active" *ngIf="currency.is_active">ACTIVE</span>
+          <span class="badge inactive" *ngIf="!currency.is_active">INACTIVE</span>
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <div class="rate-info">
+          <div class="rate-label">Exchange Rate</div>
+          <div class="rate-value">{{ currency.exchange_rate.toFixed(6) }}</div>
+          <div class="rate-note" *ngIf="!currency.is_base">
+            1 {{ baseCurrency?.code }} = {{ currency.exchange_rate.toFixed(4) }} {{ currency.code }}
+          </div>
+        </div>
+        
+        <div class="update-info">
+          <small>Last updated: {{ formatDate(currency.rate_updated_at) }}</small>
+        </div>
+      </div>
+      
+      <div class="card-actions">
+        <button class="action-btn" (click)="openForm(currency)" title="Edit">
+          ✏️
+        </button>
+        <button class="action-btn" (click)="setBaseCurrency(currency.id)" *ngIf="!currency.is_base" title="Set as Base">
+          ⭐
+        </button>
+        <button class="action-btn delete" (click)="deleteCurrency(currency.id)" *ngIf="!currency.is_base" title="Delete">
+          🗑️
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="loading">
+    Loading currencies...
+  </div>
+
+  <!-- Currency Form Modal -->
+  <div class="modal-overlay" *ngIf="showForm" (click)="closeForm()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingCurrency ? 'Edit Currency' : 'Add Currency' }}</h2>
+        <button class="close-btn" (click)="closeForm()">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Currency Code *</label>
+          <input 
+            type="text" 
+            [(ngModel)]="formData.code" 
+            placeholder="e.g., USD, EUR" 
+            maxlength="3"
+            [disabled]="!!editingCurrency"
+            style="text-transform: uppercase;">
+        </div>
+        
+        <div class="form-group">
+          <label>Currency Name *</label>
+          <input type="text" [(ngModel)]="formData.name" placeholder="e.g., US Dollar">
+        </div>
+        
+        <div class="form-group">
+          <label>Symbol *</label>
+          <input type="text" [(ngModel)]="formData.symbol" placeholder="e.g., $, €">
+        </div>
+        
+        <div class="form-group">
+          <label>Exchange Rate *</label>
+          <input 
+            type="number" 
+            [(ngModel)]="formData.exchange_rate" 
+            step="0.000001" 
+            min="0"
+            placeholder="1.0">
+          <small>Exchange rate relative to base currency</small>
+        </div>
+        
+        <div class="form-group checkbox">
+          <label>
+            <input type="checkbox" [(ngModel)]="formData.is_active">
+            Active
+          </label>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeForm()">Cancel</button>
+        <button class="btn-primary" (click)="saveCurrency()" [disabled]="saving">
+          {{ saving ? 'Saving...' : 'Save Currency' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ToastService, Toast } from '../../../services/toast.service';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-toast',
@@ -7,7 +7,7 @@ import { ToastService, Toast } from '../../../services/toast.service';
   styleUrls: ['./toast.component.scss']
 })
 export class ToastComponent implements OnInit {
-  toasts: Toast[] = [];
+  toasts: any[] = [];
 
   constructor(private toastService: ToastService) {}
 

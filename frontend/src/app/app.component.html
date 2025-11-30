@@ -18,19 +18,35 @@
         <span class="nav-icon">📦</span>
         <span class="nav-label">Products</span>
       </a>
-      <a href="#" class="nav-item">
+      <a routerLink="/sales" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">📊</span>
         <span class="nav-label">Sales</span>
       </a>
-      <a href="#" class="nav-item">
+      <a routerLink="/customers" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">👥</span>
         <span class="nav-label">Customers</span>
       </a>
-      <a href="#" class="nav-item">
+      <a routerLink="/discounts" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">🏷️</span>
+        <span class="nav-label">Discounts</span>
+      </a>
+      <a routerLink="/reports" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">📈</span>
         <span class="nav-label">Reports</span>
       </a>
-      <a href="#" class="nav-item">
+      <a routerLink="/forecasting" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">🔮</span>
+        <span class="nav-label">Forecasting</span>
+      </a>
+      <a routerLink="/sync" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">🔄</span>
+        <span class="nav-label">Sync</span>
+      </a>
+      <a routerLink="/currency" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">💱</span>
+        <span class="nav-label">Currency</span>
+      </a>
+      <a routerLink="/settings" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">⚙️</span>
         <span class="nav-label">Settings</span>
       </a>
@@ -54,10 +70,8 @@
       <div class="header-content">
         <h2 class="page-title">{{ pageTitle }}</h2>
         <div class="header-actions">
+          <app-sync-status></app-sync-status>
           <app-theme-toggle></app-theme-toggle>
-          <button class="header-btn" title="Sync">
-            <span>🔄</span>
-          </button>
           <button class="header-btn" title="Notifications">
             <span>🔔</span>
           </button>

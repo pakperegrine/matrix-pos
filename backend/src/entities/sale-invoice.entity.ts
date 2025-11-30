@@ -18,6 +18,21 @@ export class SaleInvoice {
   @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
   total: number;
 
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true, default: 0 })
+  total_cost: number;
+
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true, default: 0 })
+  total_profit: number;
+
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true, default: 0 })
+  discount_amount: number;
+
+  @Column({ nullable: true })
+  customer_id: string;
+
+  @Column({ nullable: true })
+  payment_method: string;
+
   @Column({ nullable: true })
   invoice_no: string;
 

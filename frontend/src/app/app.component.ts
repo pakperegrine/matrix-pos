@@ -14,7 +14,7 @@ export class AppComponent implements OnInit {
   private pageTitles: { [key: string]: string } = {
     '/pos': 'Point of Sale',
     '/products': 'Product Management',
-    '/sales': 'Sales Reports',
+    '/sales': 'Sales Dashboard',
     '/customers': 'Customer Management',
     '/reports': 'Analytics & Reports',
     '/settings': 'Settings'

@@ -32,6 +32,7 @@ export class TableComponent implements OnInit {
   sortColumn: string = '';
   sortDirection: 'asc' | 'desc' = 'asc';
   selectedRows: Set<any> = new Set();
+  Math = Math; // Make Math available in template
 
   ngOnInit(): void {}
 

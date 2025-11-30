@@ -1,0 +1,337 @@
+<div class="forecasting-container">
+  <div class="page-header">
+    <div class="header-left">
+      <h1>📊 Inventory Forecasting</h1>
+      <p class="subtitle">AI-powered demand prediction and stock optimization</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-primary" (click)="calculateForecasts()" [disabled]="calculating">
+        {{ calculating ? '⏳ Calculating...' : '🔄 Recalculate Forecasts' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tabs-navigation">
+    <button [class.active]="activeTab === 'overview'" (click)="activeTab = 'overview'">
+      📊 Overview
+    </button>
+    <button [class.active]="activeTab === 'alerts'" (click)="activeTab = 'alerts'">
+      ⚠️ Low Stock Alerts
+    </button>
+    <button [class.active]="activeTab === 'reorder'" (click)="activeTab = 'reorder'">
+      📦 Reorder Suggestions
+    </button>
+    <button [class.active]="activeTab === 'trends'" (click)="activeTab = 'trends'">
+      📈 Trends
+    </button>
+    <button [class.active]="activeTab === 'seasonal'" (click)="activeTab = 'seasonal'">
+      🌸 Seasonal
+    </button>
+  </div>
+
+  <!-- Overview Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'overview'">
+    <!-- Summary Cards -->
+    <div class="summary-grid" *ngIf="trendAnalysis">
+      <div class="summary-card">
+        <div class="card-icon">📦</div>
+        <div class="card-content">
+          <div class="card-label">Total Products</div>
+          <div class="card-value">{{ trendAnalysis.total_products }}</div>
+        </div>
+      </div>
+      
+      <div class="summary-card alert">
+        <div class="card-icon">⚠️</div>
+        <div class="card-content">
+          <div class="card-label">Low Stock Alerts</div>
+          <div class="card-value">{{ lowStockAlerts.length }}</div>
+        </div>
+      </div>
+      
+      <div class="summary-card success">
+        <div class="card-icon">📈</div>
+        <div class="card-content">
+          <div class="card-label">Increasing Demand</div>
+          <div class="card-value">{{ trendAnalysis.trends.increasing }}</div>
+        </div>
+      </div>
+      
+      <div class="summary-card info">
+        <div class="card-icon">🌸</div>
+        <div class="card-content">
+          <div class="card-label">Seasonal Products</div>
+          <div class="card-value">{{ trendAnalysis.trends.seasonal }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trend Distribution -->
+    <div class="chart-section" *ngIf="trendAnalysis">
+      <h3>Demand Trends Distribution</h3>
+      <div class="trend-bars">
+        <div class="trend-bar-item">
+          <div class="trend-bar-label">
+            <span>📈 Increasing</span>
+            <span class="trend-count">{{ trendAnalysis.trends.increasing }}</span>
+          </div>
+          <div class="trend-bar-track">
+            <div class="trend-bar-fill increasing" 
+              [style.width.%]="(trendAnalysis.trends.increasing / trendAnalysis.total_products) * 100">
+            </div>
+          </div>
+        </div>
+        
+        <div class="trend-bar-item">
+          <div class="trend-bar-label">
+            <span>➡️ Stable</span>
+            <span class="trend-count">{{ trendAnalysis.trends.stable }}</span>
+          </div>
+          <div class="trend-bar-track">
+            <div class="trend-bar-fill stable" 
+              [style.width.%]="(trendAnalysis.trends.stable / trendAnalysis.total_products) * 100">
+            </div>
+          </div>
+        </div>
+        
+        <div class="trend-bar-item">
+          <div class="trend-bar-label">
+            <span>📉 Decreasing</span>
+            <span class="trend-count">{{ trendAnalysis.trends.decreasing }}</span>
+          </div>
+          <div class="trend-bar-track">
+            <div class="trend-bar-fill decreasing" 
+              [style.width.%]="(trendAnalysis.trends.decreasing / trendAnalysis.total_products) * 100">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Forecasts Table -->
+    <div class="forecasts-table-section">
+      <div class="section-header">
+        <h3>📊 All Product Forecasts</h3>
+        <div class="filters">
+          <select [(ngModel)]="filterTrend" (change)="loadForecasts()">
+            <option value="all">All Trends</option>
+            <option value="increasing">Increasing</option>
+            <option value="stable">Stable</option>
+            <option value="decreasing">Decreasing</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Current Stock</th>
+              <th>Avg Daily Sales</th>
+              <th>7-Day Demand</th>
+              <th>30-Day Demand</th>
+              <th>Days Until Stockout</th>
+              <th>Trend</th>
+              <th>Confidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let forecast of getFilteredForecasts()">
+              <td class="product-name">{{ getProductName(forecast.product_id) }}</td>
+              <td class="number">{{ formatNumber(forecast.current_stock) }}</td>
+              <td class="number">{{ formatNumber(forecast.avg_daily_sales) }}</td>
+              <td class="number">{{ formatNumber(forecast.predicted_demand_7d) }}</td>
+              <td class="number">{{ formatNumber(forecast.predicted_demand_30d) }}</td>
+              <td [class]="getStockoutClass(forecast.days_until_stockout)">
+                {{ forecast.days_until_stockout }} days
+              </td>
+              <td [class]="getTrendClass(forecast.trend)">
+                {{ getTrendIcon(forecast.trend) }} {{ forecast.trend }}
+              </td>
+              <td>
+                <div class="confidence-bar">
+                  <div class="confidence-fill" [style.width.%]="forecast.forecast_confidence"></div>
+                  <span class="confidence-text">{{ forecast.forecast_confidence.toFixed(0) }}%</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Low Stock Alerts Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'alerts'">
+    <div class="alerts-header">
+      <h2>⚠️ Low Stock Alerts</h2>
+      <div class="filter-group">
+        <label>Alert Threshold:</label>
+        <select [(ngModel)]="filterDays" (change)="loadLowStockAlerts()">
+          <option [value]="3">3 Days</option>
+          <option [value]="7">7 Days</option>
+          <option [value]="14">14 Days</option>
+          <option [value]="30">30 Days</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="alerts-grid">
+      <div class="alert-card" *ngFor="let alert of lowStockAlerts" 
+        [class]="getStockoutClass(alert.days_until_stockout)">
+        <div class="alert-header">
+          <div class="alert-title">{{ getProductName(alert.product_id) }}</div>
+          <div class="alert-badge" [class]="getStockoutClass(alert.days_until_stockout)">
+            {{ alert.days_until_stockout }} days left
+          </div>
+        </div>
+        
+        <div class="alert-body">
+          <div class="alert-metric">
+            <span class="metric-label">Current Stock:</span>
+            <span class="metric-value">{{ formatNumber(alert.current_stock) }}</span>
+          </div>
+          <div class="alert-metric">
+            <span class="metric-label">Reorder Point:</span>
+            <span class="metric-value">{{ formatNumber(alert.reorder_point) }}</span>
+          </div>
+          <div class="alert-metric">
+            <span class="metric-label">Suggested Order:</span>
+            <span class="metric-value highlight">{{ formatNumber(alert.suggested_order_qty) }} units</span>
+          </div>
+        </div>
+        
+        <div class="alert-footer">
+          <div class="trend-indicator" [class]="getTrendClass(alert.trend)">
+            {{ getTrendIcon(alert.trend) }} {{ alert.trend | titlecase }}
+          </div>
+          <span class="seasonal-badge" *ngIf="alert.is_seasonal">🌸 Seasonal</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="lowStockAlerts.length === 0">
+      ✅ No low stock alerts at this time!
+    </div>
+  </div>
+
+  <!-- Reorder Suggestions Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'reorder'">
+    <h2>📦 Reorder Suggestions</h2>
+    
+    <div class="reorder-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Current Stock</th>
+            <th>Reorder Point</th>
+            <th>Suggested Order Qty</th>
+            <th>Days Until Stockout</th>
+            <th>Urgency</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let suggestion of reorderSuggestions">
+            <td class="product-name">{{ getProductName(suggestion.product_id) }}</td>
+            <td class="number">{{ formatNumber(suggestion.current_stock) }}</td>
+            <td class="number">{{ formatNumber(suggestion.reorder_point) }}</td>
+            <td class="number highlight">{{ formatNumber(suggestion.suggested_order_qty) }}</td>
+            <td [class]="getStockoutClass(suggestion.days_until_stockout)">
+              {{ suggestion.days_until_stockout }} days
+            </td>
+            <td>
+              <span class="urgency-badge" [class]="getUrgencyClass(suggestion.urgency)">
+                {{ suggestion.urgency | uppercase }}
+              </span>
+            </td>
+            <td>
+              <button class="action-btn">Create PO</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="empty-state" *ngIf="reorderSuggestions.length === 0">
+      ✅ All products are adequately stocked!
+    </div>
+  </div>
+
+  <!-- Trends Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'trends'">
+    <h2>📈 Demand Trends Analysis</h2>
+    
+    <div class="trends-grid">
+      <div class="trend-category">
+        <h3>📈 Increasing Demand ({{ trendAnalysis?.trends.increasing || 0 }})</h3>
+        <div class="product-list">
+          <div class="product-item" *ngFor="let forecast of getIncreasingForecasts()">
+            <div class="product-info">
+              <div class="product-name">{{ getProductName(forecast.product_id) }}</div>
+              <div class="product-stats">
+                <span>📊 {{ formatNumber(forecast.avg_daily_sales) }}/day</span>
+                <span>📈 +{{ ((forecast.predicted_demand_30d / (forecast.avg_daily_sales * 30) - 1) * 100).toFixed(0) }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="trend-category">
+        <h3>📉 Decreasing Demand ({{ trendAnalysis?.trends.decreasing || 0 }})</h3>
+        <div class="product-list">
+          <div class="product-item" *ngFor="let forecast of getDecreasingForecasts()">
+            <div class="product-info">
+              <div class="product-name">{{ getProductName(forecast.product_id) }}</div>
+              <div class="product-stats">
+                <span>📊 {{ formatNumber(forecast.avg_daily_sales) }}/day</span>
+                <span class="negative">📉 {{ ((forecast.predicted_demand_30d / (forecast.avg_daily_sales * 30) - 1) * 100).toFixed(0) }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seasonal Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'seasonal'">
+    <h2>🌸 Seasonal Products</h2>
+    <p class="tab-description">Products with irregular sales patterns that may be influenced by seasons or events</p>
+    
+    <div class="seasonal-grid">
+      <div class="seasonal-card" *ngFor="let product of seasonalProducts">
+        <div class="seasonal-icon">🌸</div>
+        <div class="seasonal-info">
+          <div class="seasonal-name">{{ getProductName(product.product_id) }}</div>
+          <div class="seasonal-metrics">
+            <div class="metric">
+              <span class="label">Avg Daily:</span>
+              <span class="value">{{ formatNumber(product.avg_daily_sales) }}</span>
+            </div>
+            <div class="metric">
+              <span class="label">30-Day Forecast:</span>
+              <span class="value">{{ formatNumber(product.predicted_demand_30d) }}</span>
+            </div>
+            <div class="metric">
+              <span class="label">Current Stock:</span>
+              <span class="value">{{ formatNumber(product.current_stock) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="seasonalProducts.length === 0">
+      No seasonal patterns detected at this time
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="loading">
+    Loading forecast data...
+  </div>
+</div>

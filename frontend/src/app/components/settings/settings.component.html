@@ -1,0 +1,416 @@
+<div class="settings-container">
+  <div class="settings-header">
+    <h1>⚙️ System Settings</h1>
+    <div class="header-actions">
+      <button class="reset-btn" (click)="resetToDefaults()" [disabled]="loading || saving">
+        🔄 Reset to Defaults
+      </button>
+      <button class="save-btn" (click)="saveSettings()" [disabled]="loading || saving || !settings">
+        {{ saving ? '💾 Saving...' : '💾 Save Changes' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="message" *ngIf="message" [class.success]="messageType === 'success'" [class.error]="messageType === 'error'">
+    {{ message }}
+  </div>
+
+  <div class="loading" *ngIf="loading">Loading settings...</div>
+
+  <div class="settings-content" *ngIf="!loading && settings">
+    <!-- Tab Navigation -->
+    <div class="tabs">
+      <button class="tab" [class.active]="activeTab === 'business'" (click)="setActiveTab('business')">
+        🏢 Business Info
+      </button>
+      <button class="tab" [class.active]="activeTab === 'tax'" (click)="setActiveTab('tax')">
+        💰 Tax Settings
+      </button>
+      <button class="tab" [class.active]="activeTab === 'receipt'" (click)="setActiveTab('receipt')">
+        🧾 Receipt Settings
+      </button>
+      <button class="tab" [class.active]="activeTab === 'currency'" (click)="setActiveTab('currency')">
+        💱 Currency & Format
+      </button>
+      <button class="tab" [class.active]="activeTab === 'inventory'" (click)="setActiveTab('inventory')">
+        📦 Inventory
+      </button>
+      <button class="tab" [class.active]="activeTab === 'invoice'" (click)="setActiveTab('invoice')">
+        📄 Invoice
+      </button>
+      <button class="tab" [class.active]="activeTab === 'pos'" (click)="setActiveTab('pos')">
+        🛒 POS
+      </button>
+      <button class="tab" [class.active]="activeTab === 'system'" (click)="setActiveTab('system')">
+        🖥️ System
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Business Information Tab -->
+      <div class="tab-panel" *ngIf="activeTab === 'business'">
+        <h2>Business Information</h2>
+        <div class="form-group">
+          <label for="business_name">Business Name *</label>
+          <input type="text" id="business_name" [(ngModel)]="settings.business_name" placeholder="My Business" />
+        </div>
+        <div class="form-group">
+          <label for="business_address">Business Address</label>
+          <textarea id="business_address" [(ngModel)]="settings.business_address" placeholder="123 Main St, City, State, ZIP" rows="3"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="business_phone">Phone Number</label>
+            <input type="text" id="business_phone" [(ngModel)]="settings.business_phone" placeholder="+1 (555) 123-4567" />
+          </div>
+          <div class="form-group">
+            <label for="business_email">Email Address</label>
+            <input type="email" id="business_email" [(ngModel)]="settings.business_email" placeholder="contact@business.com" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="business_registration">Registration/Tax Number</label>
+          <input type="text" id="business_registration" [(ngModel)]="settings.business_registration" placeholder="REG-123456789" />
+        </div>
+        <div class="form-group">
+          <label for="business_logo_url">Logo URL</label>
+          <input type="text" id="business_logo_url" [(ngModel)]="settings.business_logo_url" placeholder="https://example.com/logo.png" />
+        </div>
+      </div>
+
+      <!-- Tax Settings Tab -->
+      <div class="tab-panel" *ngIf="activeTab === 'tax'">
+        <h2>Tax Configuration</h2>
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" [(ngModel)]="taxEnabled" />
+            Enable Tax Calculation
+          </label>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="tax_label">Tax Label</label>
+            <input type="text" id="tax_label" [(ngModel)]="settings.tax_label" placeholder="VAT, GST, Sales Tax" />
+          </div>
+          <div class="form-group">
+            <label for="tax_rate">Tax Rate (%)</label>
+            <input type="number" id="tax_rate" [(ngModel)]="settings.tax_rate" step="0.01" min="0" max="100" placeholder="15.00" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="tax_type">Tax Type</label>
+          <select id="tax_type" [(ngModel)]="settings.tax_type">
+            <option value="inclusive">Inclusive (Price includes tax)</option>
+            <option value="exclusive">Exclusive (Tax added to price)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="tax_number">Tax Registration Number</label>
+          <input type="text" id="tax_number" [(ngModel)]="settings.tax_number" placeholder="TAX-123456789" />
+        </div>
+      </div>
+
+      <!-- Receipt Settings Tab -->
+      <div class="tab-panel" *ngIf="activeTab === 'receipt'">
+        <h2>Receipt Configuration</h2>
+        <div class="form-group">
+          <label for="receipt_header">Receipt Header Text</label>
+          <input type="text" id="receipt_header" [(ngModel)]="settings.receipt_header" placeholder="Thank you for your purchase!" />
+        </div>
+        <div class="form-group">
+          <label for="receipt_footer">Receipt Footer Text</label>
+          <textarea id="receipt_footer" [(ngModel)]="settings.receipt_footer" placeholder="Please come again!" rows="3"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="receipt_format">Receipt Format</label>
+            <select id="receipt_format" [(ngModel)]="settings.receipt_format">
+              <option value="thermal">Thermal (58mm/80mm)</option>
+              <option value="a4">A4</option>
+              <option value="letter">Letter</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="receipt_width">Receipt Width (mm)</label>
+            <input type="number" id="receipt_width" [(ngModel)]="settings.receipt_width" min="40" max="210" placeholder="80" />
+          </div>
+        </div>
+        <div class="checkbox-section">
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="showReceiptLogo" />
+              Show Logo on Receipt
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="autoPrintReceipt" />
+              Auto-print Receipt after Sale
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="showTaxOnReceipt" />
+              Show Tax on Receipt
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="showBusinessInfoOnReceipt" />
+              Show Business Info on Receipt
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Currency & Format Tab -->
+      <div class="tab-panel" *ngIf="activeTab === 'currency'">
+        <h2>Currency & Number Format</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="default_currency">Default Currency (ISO)</label>
+            <input type="text" id="default_currency" [(ngModel)]="settings.default_currency" placeholder="USD" maxlength="3" />
+          </div>
+          <div class="form-group">
+            <label for="currency_symbol">Currency Symbol</label>
+            <input type="text" id="currency_symbol" [(ngModel)]="settings.currency_symbol" placeholder="$" maxlength="10" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="currency_position">Symbol Position</label>
+          <select id="currency_position" [(ngModel)]="settings.currency_position">
+            <option value="before">Before Amount ($100)</option>
+            <option value="after">After Amount (100$)</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="decimal_places">Decimal Places</label>
+            <input type="number" id="decimal_places" [(ngModel)]="settings.decimal_places" min="0" max="4" placeholder="2" />
+          </div>
+          <div class="form-group">
+            <label for="decimal_separator">Decimal Separator</label>
+            <select id="decimal_separator" [(ngModel)]="settings.decimal_separator">
+              <option value=".">Period (.)</option>
+              <option value=",">,Comma (,)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="thousand_separator">Thousand Separator</label>
+          <select id="thousand_separator" [(ngModel)]="settings.thousand_separator">
+            <option value=",">Comma (,)</option>
+            <option value=".">Period (.)</option>
+            <option value=" ">Space ( )</option>
+            <option value="">None</option>
+          </select>
+        </div>
+        <div class="format-preview">
+          <strong>Preview:</strong>
+          <span *ngIf="settings.currency_position === 'before'">
+            {{ settings.currency_symbol }}1{{ settings.thousand_separator }}234{{ settings.decimal_separator }}{{ '56'.substring(0, settings.decimal_places) }}
+          </span>
+          <span *ngIf="settings.currency_position === 'after'">
+            1{{ settings.thousand_separator }}234{{ settings.decimal_separator }}{{ '56'.substring(0, settings.decimal_places) }}{{ settings.currency_symbol }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Inventory Tab -->
+      <div class="tab-panel" *ngIf="activeTab === 'inventory'">
+        <h2>Inventory Management</h2>
+        <div class="checkbox-section">
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="allowNegativeStock" />
+              Allow Negative Stock
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="trackStockBatches" />
+              Track Stock Batches (FIFO)
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="showLowStockAlerts" />
+              Show Low Stock Alerts
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="low_stock_threshold">Low Stock Threshold (units)</label>
+          <input type="number" id="low_stock_threshold" [(ngModel)]="settings.low_stock_threshold" min="0" placeholder="10" />
+          <small>Alert when stock falls below this number</small>
+        </div>
+      </div>
+
+      <!-- Invoice Tab -->
+      <div class="tab-panel" *ngIf="activeTab === 'invoice'">
+        <h2>Invoice Configuration</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="invoice_prefix">Invoice Prefix</label>
+            <input type="text" id="invoice_prefix" [(ngModel)]="settings.invoice_prefix" placeholder="INV" maxlength="10" />
+          </div>
+          <div class="form-group">
+            <label for="invoice_start_number">Starting Number</label>
+            <input type="number" id="invoice_start_number" [(ngModel)]="settings.invoice_start_number" min="1" placeholder="1" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="invoice_number_padding">Number Padding (digits)</label>
+          <input type="number" id="invoice_number_padding" [(ngModel)]="settings.invoice_number_padding" min="1" max="10" placeholder="5" />
+          <small>Example with padding 5: {{ settings.invoice_prefix }}{{ '00001' }}</small>
+        </div>
+      </div>
+
+      <!-- POS Settings Tab -->
+      <div class="tab-panel" *ngIf="activeTab === 'pos'">
+        <h2>Point of Sale Settings</h2>
+        <div class="checkbox-section">
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="enableDiscounts" />
+              Enable Discounts
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="enableCustomerSelection" />
+              Enable Customer Selection
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="enableBarcodeScanner" />
+              Enable Barcode Scanner
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="requireCustomerForSale" />
+              Require Customer for Every Sale
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="products_per_page">Products Per Page</label>
+          <input type="number" id="products_per_page" [(ngModel)]="settings.products_per_page" min="5" max="100" placeholder="20" />
+        </div>
+        <div class="form-group">
+          <label for="offline_sync_interval">Offline Sync Interval (minutes)</label>
+          <input type="number" id="offline_sync_interval" [(ngModel)]="settings.offline_sync_interval" min="1" max="1440" placeholder="30" />
+        </div>
+        <div class="form-group">
+          <label for="max_offline_transactions">Max Offline Transactions</label>
+          <input type="number" id="max_offline_transactions" [(ngModel)]="settings.max_offline_transactions" min="10" max="1000" placeholder="100" />
+        </div>
+      </div>
+
+      <!-- System Settings Tab -->
+      <div class="tab-panel" *ngIf="activeTab === 'system'">
+        <h2>System Configuration</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="language">Language</label>
+            <select id="language" [(ngModel)]="settings.language">
+              <option value="en">English</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="pt">Portuguese</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="timezone">Timezone</label>
+            <select id="timezone" [(ngModel)]="settings.timezone">
+              <option value="America/New_York">Eastern Time (ET)</option>
+              <option value="America/Chicago">Central Time (CT)</option>
+              <option value="America/Denver">Mountain Time (MT)</option>
+              <option value="America/Los_Angeles">Pacific Time (PT)</option>
+              <option value="America/Phoenix">Arizona Time</option>
+              <option value="Europe/London">London (GMT)</option>
+              <option value="Europe/Paris">Paris (CET)</option>
+              <option value="Asia/Tokyo">Tokyo (JST)</option>
+              <option value="Asia/Dubai">Dubai (GST)</option>
+              <option value="Australia/Sydney">Sydney (AEST)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date_format">Date Format</label>
+            <select id="date_format" [(ngModel)]="settings.date_format">
+              <option value="MM/DD/YYYY">MM/DD/YYYY (12/31/2025)</option>
+              <option value="DD/MM/YYYY">DD/MM/YYYY (31/12/2025)</option>
+              <option value="YYYY-MM-DD">YYYY-MM-DD (2025-12-31)</option>
+              <option value="DD-MMM-YYYY">DD-MMM-YYYY (31-Dec-2025)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="time_format">Time Format</label>
+            <select id="time_format" [(ngModel)]="settings.time_format">
+              <option value="hh:mm A">12-hour (03:30 PM)</option>
+              <option value="HH:mm">24-hour (15:30)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="session_timeout">Session Timeout (minutes)</label>
+          <input type="number" id="session_timeout" [(ngModel)]="settings.session_timeout" min="5" max="1440" placeholder="30" />
+        </div>
+        <div class="checkbox-section">
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="enableOfflineMode" />
+              Enable Offline Mode
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="enableEmailNotifications" />
+              Enable Email Notifications
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="enableLowStockNotifications" />
+              Enable Low Stock Notifications
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="enableDailySalesReport" />
+              Enable Daily Sales Report
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="enableSoundEffects" />
+              Enable Sound Effects
+            </label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="enableAnimations" />
+              Enable Animations
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="settings-footer">
+      <button class="reset-btn" (click)="resetToDefaults()" [disabled]="loading || saving">
+        🔄 Reset to Defaults
+      </button>
+      <button class="save-btn" (click)="saveSettings()" [disabled]="loading || saving">
+        {{ saving ? '💾 Saving...' : '💾 Save Changes' }}
+      </button>
+    </div>
+  </div>
+</div>
