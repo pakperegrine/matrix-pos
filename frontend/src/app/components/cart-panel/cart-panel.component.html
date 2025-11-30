@@ -1,6 +1,9 @@
 <div class="cart-panel">
   <div class="cart-header">
-    <h4>Shopping Cart</h4>
+    <div class="title-block">
+      <h4>Shopping Cart</h4>
+      <span class="cart-subtitle" *ngIf="cart.length > 0">{{ cart.length }} item{{ cart.length === 1 ? '' : 's' }} in cart</span>
+    </div>
     <button *ngIf="cart.length > 0" class="clear-btn" (click)="onClearCart()" title="Clear cart">
       🗑️
     </button>
@@ -13,36 +16,93 @@
   </div>
   
   <div class="cart-items" *ngIf="cart.length > 0">
-    <div *ngFor="let c of cart" class="cart-item">
-      <div class="item-details">
-        <div class="item-name">{{ c.product.name }}</div>
-        <div class="item-price">{{ c.product.price | currency }}</div>
+    <div *ngFor="let c of (cart || [])" class="cart-item">
+      <div class="item-header">
+        <div class="item-info">
+          <div class="item-name">{{ c.product.name }}</div>
+          <div class="item-meta">
+            <span class="unit-price">{{ c.product.price | customCurrency }} each</span>
+            <span class="item-qty-chip">×{{ c.qty }}</span>
+          </div>
+        </div>
+        <button class="remove-btn" (click)="onRemoveItem(c)" title="Remove item">×</button>
       </div>
-      <div class="item-controls">
+      <div class="item-footer">
         <div class="qty-controls">
           <button class="qty-btn" (click)="decreaseQty(c)">−</button>
           <span class="qty-value">{{ c.qty }}</span>
           <button class="qty-btn" (click)="increaseQty(c)">+</button>
         </div>
-        <div class="item-total">{{ (c.product.price * c.qty) | currency }}</div>
-        <button class="remove-btn" (click)="onRemoveItem(c)" title="Remove item">×</button>
+        <div class="item-total">
+          <span class="label">Line Total</span>
+          <span class="value">{{ (c.product.price * c.qty) | customCurrency }}</span>
+        </div>
       </div>
     </div>
   </div>
   
   <div class="cart-footer" *ngIf="cart.length > 0">
+    <!-- Discount Section -->
+    <div class="discount-section" *ngIf="settingsService.isDiscountsEnabled()">
+      <div class="discount-label">💰 Discounts & Coupons</div>
+      
+      <!-- Coupon Code Input -->
+      <div class="coupon-input-group">
+        <input
+          type="text"
+          [(ngModel)]="localCouponCode"
+          (ngModelChange)="onCouponCodeChange()"
+          placeholder="Enter coupon code"
+          class="coupon-input"
+          (keyup.enter)="onApplyCoupon()"
+        />
+        <button
+          *ngIf="!localCouponCode"
+          class="apply-coupon-btn"
+          (click)="onApplyCoupon()"
+          [disabled]="validatingCoupon"
+        >
+          {{ validatingCoupon ? '...' : 'Apply' }}
+        </button>
+        <button
+          *ngIf="localCouponCode"
+          class="remove-coupon-btn"
+          (click)="onRemoveCoupon()"
+          title="Remove coupon"
+        >
+          ×
+        </button>
+      </div>
+
+      <!-- Applied Discounts -->
+      <div *ngIf="appliedDiscounts?.applied_discounts?.length ?? 0 > 0" class="applied-discounts">
+        <div *ngFor="let discount of (appliedDiscounts?.applied_discounts || [])" class="discount-item">
+          <span class="discount-name">✓ {{ discount.discount_name }}</span>
+          <span class="discount-value">-{{ discount.discount_amount | customCurrency }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Price Breakdown -->
     <div class="subtotal-row">
       <span>Subtotal:</span>
-      <span>{{ total | currency }}</span>
+      <span>{{ subtotal | customCurrency }}</span>
     </div>
-    <div class="tax-row">
-      <span>Tax (0%):</span>
-      <span>{{ 0 | currency }}</span>
+    <div class="discount-row" *ngIf="discountAmount > 0">
+      <span class="discount-text">Discount:</span>
+      <span class="discount-value">-{{ discountAmount | customCurrency }}</span>
+    </div>
+    <div class="tax-row" *ngIf="settingsService.isTaxEnabled() && settingsService.showTaxOnReceipt()">
+      <span>{{ settingsService.getTaxLabel() }} ({{ settingsService.getTaxRate() }}%):</span>
+      <span>{{ taxAmount | customCurrency }}</span>
     </div>
     <hr />
     <div class="total-row">
       <strong>Total:</strong>
-      <strong class="total-amount">{{ total | currency }}</strong>
+      <strong class="total-amount">{{ total | customCurrency }}</strong>
+    </div>
+    <div *ngIf="discountAmount > 0" class="savings-badge">
+      🎉 You saved {{ discountAmount | customCurrency }}!
     </div>
     <button class="checkout-btn" (click)="onCheckout()">
       <span class="btn-icon">💳</span>

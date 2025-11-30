@@ -3,26 +3,95 @@
     <div class="products-section">
       <div class="section-header">
         <h3 class="section-title">Products</h3>
-        <div class="product-count">{{ products.length }} items</div>
+        <div class="product-count">{{ filteredProducts.length }} of {{ products.length }} items</div>
       </div>
-      <app-pos-grid>
-        <app-pos-product-card
-          *ngFor="let p of products"
-          [product]="p"
-          (click)="addToCart(p)"
-          style="cursor:pointer"
-        ></app-pos-product-card>
-      </app-pos-grid>
+
+      <!-- Search and Filter Bar -->
+      <div class="filter-bar">
+        <div class="search-box">
+          <input 
+            type="text" 
+            class="search-input"
+            [placeholder]="settingsService.isBarcodeScannerEnabled() ? 'Search by name, barcode, or SKU... (Scan or type)' : 'Search by name or SKU...'"
+            [(ngModel)]="searchQuery"
+            (input)="onSearchChange()"
+            (keypress)="onSearchKeyPress($event)"
+          />
+          <span class="search-icon">{{ settingsService.isBarcodeScannerEnabled() ? '📷' : '🔍' }}</span>
+        </div>
+
+        <div class="category-filter">
+          <select 
+            class="category-select"
+            [(ngModel)]="selectedCategory"
+            (change)="onCategoryChange()"
+          >
+            <option value="">All Categories</option>
+            <option *ngFor="let cat of (categories || [])" [value]="cat">{{ cat }}</option>
+          </select>
+        </div>
+
+        <button 
+          *ngIf="searchQuery || selectedCategory" 
+          class="clear-filters-btn"
+          (click)="clearFilters()"
+        >
+          Clear Filters
+        </button>
+      </div>
+
+      <!-- Product Table -->
+      <div class="product-table-container">
+        <table class="product-table">
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>SKU</th>
+              <th>Barcode</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of (filteredProducts || [])" class="product-row" (click)="addToCart(p)">
+              <td class="product-name">{{ p.name }}</td>
+              <td class="product-sku">{{ p.sku || '-' }}</td>
+              <td class="product-barcode">{{ p.barcode || '-' }}</td>
+              <td class="product-category">{{ p.category_id || '-' }}</td>
+              <td class="product-price">{{ p.price | customCurrency }}</td>
+              <td class="product-action">
+                <button class="add-btn" (click)="addToCart(p); $event.stopPropagation()">+ Add</button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredProducts.length === 0">
+              <td colspan="6" class="no-results">No products found</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="cart-section">
       <app-cart-panel 
         [cart]="cart" 
         [total]="total"
+        [subtotal]="subtotal"
+        [discountAmount]="discountAmount"
+        [taxAmount]="taxAmount"
+        [activeDiscounts]="activeDiscounts"
+        [selectedDiscountId]="selectedDiscountId"
+        [couponCode]="couponCode"
+        [appliedDiscounts]="appliedDiscounts"
+        [validatingCoupon]="validatingCoupon"
         (updateQuantity)="updateQuantity($event)"
         (removeItem)="removeItem($event)"
         (checkout)="openCheckout()"
         (clearCart)="clearCart()"
+        (discountChange)="onDiscountChange()"
+        (applyCoupon)="applyCouponCode()"
+        (removeCoupon)="removeCoupon()"
+        (couponCodeChange)="couponCode = $event"
       ></app-cart-panel>
     </div>
   </div>
@@ -39,15 +108,53 @@
     <div class="checkout-content">
       <div class="checkout-summary">
         <h4>Order Summary</h4>
-        <div class="summary-items">
-          <div *ngFor="let item of cart" class="summary-item">
-            <span>{{ item.product.name }} x{{ item.qty }}</span>
-            <span>{{ (item.product.price * item.qty) | currency }}</span>
+          <div class="summary-items" *ngIf="(cart || []).length > 0">
+            <div *ngFor="let item of (cart || [])" class="summary-item">
+              <div class="summary-item-name">
+                {{ item.product.name }}
+                <span class="summary-item-qty">×{{ item.qty }}</span>
+              </div>
+              <div class="summary-item-amount">{{ (item.product.price * item.qty) | customCurrency }}</div>
+            </div>
           </div>
+        <div class="summary-subtotal" *ngIf="discountAmount > 0">
+          <span>Subtotal (before discount)</span>
+          <span>{{ subtotal | customCurrency }}</span>
+        </div>
+        <div class="summary-discount" *ngIf="discountAmount > 0">
+          <span class="discount-label">Discount:</span>
+          <span class="discount-value">-{{ discountAmount | customCurrency }}</span>
+        </div>
+        <div *ngIf="appliedDiscounts?.applied_discounts?.length ?? 0 > 0" class="applied-discounts-list">
+          <div *ngFor="let discount of (appliedDiscounts?.applied_discounts || [])" class="discount-detail">
+            <span>• {{ discount.discount_name }}</span>
+            <span>-{{ discount.discount_amount | customCurrency }}</span>
+          </div>
+        </div>
+        <div class="summary-tax" *ngIf="settingsService.isTaxEnabled()">
+          <span>{{ settingsService.getTaxLabel() }} ({{ settingsService.getTaxRate() }}%):</span>
+          <span>{{ taxAmount | customCurrency }}</span>
         </div>
         <div class="summary-total">
           <span>Total:</span>
-          <span class="total-value">{{ total | currency }}</span>
+          <span class="total-value">{{ total | customCurrency }}</span>
+        </div>
+        <div *ngIf="discountAmount > 0" class="savings-message">
+          🎉 You're saving {{ discountAmount | customCurrency }}!
+        </div>
+      </div>
+
+      <!-- Customer Selection -->
+      <div class="customer-section" *ngIf="settingsService.isCustomerSelectionEnabled()">
+        <h4>Customer <span *ngIf="settingsService.isCustomerRequired()" class="required">*</span></h4>
+        <select class="customer-select" [(ngModel)]="selectedCustomerId">
+          <option value="">Walk-in Customer</option>
+          <option *ngFor="let customer of (customers || [])" [value]="customer.id">
+            {{ customer.name }} - {{ customer.phone || customer.email }}
+          </option>
+        </select>
+        <div *ngIf="settingsService.isCustomerRequired() && !selectedCustomerId" class="required-note">
+          ⚠️ Customer selection is required
         </div>
       </div>
 
@@ -55,11 +162,11 @@
         <h4>Payment Method</h4>
         <div class="payment-methods">
           <label class="payment-option">
-            <input type="radio" name="payment" value="cash" [(ngModel)]="paymentMethod" />
+            <input type="radio" name="payment" value="cash" [(ngModel)]="paymentMethod" (change)="onPaymentMethodChange('cash')" />
             <span class="option-label">💵 Cash</span>
           </label>
           <label class="payment-option">
-            <input type="radio" name="payment" value="card" [(ngModel)]="paymentMethod" />
+            <input type="radio" name="payment" value="card" [(ngModel)]="paymentMethod" (change)="onPaymentMethodChange('card')" />
             <span class="option-label">💳 Card</span>
           </label>
         </div>
@@ -69,13 +176,14 @@
           <input 
             type="number" 
             class="amount-input" 
+            #cashAmountInput
             [(ngModel)]="amountPaid"
             [min]="total"
             step="0.01"
           />
           <div class="change-display" *ngIf="amountPaid >= total">
             <span>Change:</span>
-            <span class="change-value">{{ change | currency }}</span>
+            <span class="change-value">{{ change | customCurrency }}</span>
           </div>
         </div>
       </div>
