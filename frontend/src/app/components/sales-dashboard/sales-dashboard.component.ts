@@ -67,6 +67,18 @@ export class SalesDashboardComponent implements OnInit {
     private toastService: ToastService
   ) {}
 
+  private getHeaders() {
+    const businessId = localStorage.getItem('businessId') || 'default_business';
+    return {
+      headers: {
+        'x-business-id': businessId
+      },
+      params: {
+        businessId: businessId
+      }
+    };
+  }
+
   ngOnInit(): void {
     this.loadDashboardData();
   }
@@ -91,7 +103,7 @@ export class SalesDashboardComponent implements OnInit {
   async loadSummary(): Promise<void> {
     try {
       // For now, we'll calculate from transactions since backend doesn't have summary endpoint
-      const invoices = await this.http.get<any[]>(`${this.apiUrl}/sales`).toPromise() || [];
+      const invoices = await this.http.get<any[]>(`${this.apiUrl}/sales`, this.getHeaders()).toPromise() || [];
       
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -103,8 +115,8 @@ export class SalesDashboardComponent implements OnInit {
       
       invoices.forEach(inv => {
         const invDate = new Date(inv.created_at);
-        const sales = inv.total_amount || 0;
-        const profit = inv.total_fifo_profit || 0;
+        const sales = inv.total || 0;
+        const profit = inv.total_profit || 0;
         
         if (invDate >= monthStart) {
           monthSales += sales;
@@ -134,7 +146,7 @@ export class SalesDashboardComponent implements OnInit {
 
   async loadChartData(): Promise<void> {
     try {
-      const invoices = await this.http.get<any[]>(`${this.apiUrl}/sales`).toPromise() || [];
+      const invoices = await this.http.get<any[]>(`${this.apiUrl}/sales`, this.getHeaders()).toPromise() || [];
       
       // Generate labels based on period
       const labels: string[] = [];
@@ -187,8 +199,8 @@ export class SalesDashboardComponent implements OnInit {
         }
         
         if (salesMap.has(label)) {
-          salesMap.set(label, (salesMap.get(label) || 0) + (inv.total_amount || 0));
-          profitMap.set(label, (profitMap.get(label) || 0) + (inv.total_fifo_profit || 0));
+          salesMap.set(label, (salesMap.get(label) || 0) + (inv.total || 0));
+          profitMap.set(label, (profitMap.get(label) || 0) + (inv.total_profit || 0));
         }
       });
       
@@ -205,7 +217,7 @@ export class SalesDashboardComponent implements OnInit {
   async loadTopProducts(): Promise<void> {
     try {
       // We'll need to aggregate from sale items
-      const items = await this.http.get<any[]>(`${this.apiUrl}/sales`).toPromise() || [];
+      const items = await this.http.get<any[]>(`${this.apiUrl}/sales`, this.getHeaders()).toPromise() || [];
       
       const productMap = new Map<string, TopProduct>();
       
@@ -222,15 +234,15 @@ export class SalesDashboardComponent implements OnInit {
 
   async loadRecentTransactions(): Promise<void> {
     try {
-      const invoices = await this.http.get<any[]>(`${this.apiUrl}/sales`).toPromise() || [];
+      const invoices = await this.http.get<any[]>(`${this.apiUrl}/sales`, this.getHeaders()).toPromise() || [];
       
       this.recentTransactions = invoices
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 10)
         .map(inv => ({
           id: inv.id,
-          invoice_no: inv.invoice_no || 'N/A',
-          total_amount: inv.total_amount || 0,
+          invoice_no: inv.invoice_no || 'INV-' + inv.id.substring(0, 8),
+          total_amount: inv.total || 0,
           payment_method: inv.payment_method || 'cash',
           created_at: inv.created_at,
           item_count: 0 // Would need to join with sale_items

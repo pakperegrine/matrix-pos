@@ -76,8 +76,7 @@
           <td><span class="badge badge-type-{{customer.customer_type}}">{{ customer.customer_type }}</span></td>
           <td>
             <span 
-              class="badge badge-tier" 
-              [style.background]="getLoyaltyTierInfo(customer.loyalty_tier || 'bronze').color"
+              class="badge badge-tier {{ (customer.loyalty_tier || 'bronze') }}"
             >
               {{ getLoyaltyTierInfo(customer.loyalty_tier || 'bronze').label }}
             </span>
@@ -109,7 +108,7 @@
   </div>
 
   <!-- Customer Form Modal -->
-  <app-modal *ngIf="showModal" [isOpen]="showModal" (close)="closeModal()">>
+  <app-modal *ngIf="showModal" [isOpen]="showModal" (close)="closeModal()">
     <h3 header>{{ isEditing ? 'Edit Customer' : 'Add New Customer' }}</h3>
     
     <div content class="customer-form">
@@ -228,7 +227,7 @@
       </div>
 
       <div class="stats-details">
-        <p><strong>Loyalty Tier:</strong> <span class="badge badge-tier" [style.background]="getLoyaltyTierInfo(customerStats.loyalty_tier).color">{{ getLoyaltyTierInfo(customerStats.loyalty_tier).label }}</span></p>
+        <p><strong>Loyalty Tier:</strong> <span class="badge badge-tier {{ customerStats.loyalty_tier }}">{{ getLoyaltyTierInfo(customerStats.loyalty_tier).label }}</span></p>
         <p><strong>Customer Since:</strong> {{ formatDate(customerStats.customer_since) }}</p>
         <p><strong>Last Purchase:</strong> {{ formatDate(customerStats.last_purchase_date) }}</p>
         <p><strong>Current Balance:</strong> {{ formatCurrency(customerStats.current_balance) }}</p>

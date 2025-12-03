@@ -8,6 +8,7 @@ export class SyncController {
   @Post('offline-sale')
   async offlineSale(@Req() req: any, @Body() body: any) {
     const businessId = req.businessId;
-    return this.svc.ingestOfflineSale(businessId, body);
+    const userId = req.user?.userId || req.headers['x-user-id'] || null;
+    return this.svc.ingestOfflineSale(businessId, userId, body);
   }
 }

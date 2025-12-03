@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryColumn, Index } from 'typeorm';
+import { Entity, Column, PrimaryColumn, Index, ManyToOne, JoinColumn } from 'typeorm';
+import { Customer } from './customer.entity';
 
 @Entity({ name: 'sale_invoices' })
 export class SaleInvoice {
@@ -29,6 +30,10 @@ export class SaleInvoice {
 
   @Column({ nullable: true })
   customer_id: string;
+
+  @ManyToOne(() => Customer, { nullable: true })
+  @JoinColumn({ name: 'customer_id' })
+  customer: Customer;
 
   @Column({ nullable: true })
   payment_method: string;

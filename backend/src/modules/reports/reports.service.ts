@@ -178,14 +178,17 @@ export class ReportsService {
       .select([
         'product.id as product_id',
         'product.name as product_name',
-        'product.category as category',
+        'product.category_id as category',
         'SUM(item.quantity) as total_quantity',
         'SUM(item.sale_price * item.quantity) as total_revenue',
         'COUNT(DISTINCT invoice.id) as order_count',
         'AVG(item.sale_price) as avg_price',
       ])
       .where('invoice.business_id = :businessId', { businessId })
+      .andWhere('product.id IS NOT NULL')
       .groupBy('product.id')
+      .addGroupBy('product.name')
+      .addGroupBy('product.category_id')
       .orderBy('total_revenue', 'DESC')
       .limit(limit);
 

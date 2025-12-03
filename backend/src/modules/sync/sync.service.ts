@@ -30,7 +30,21 @@ export class SyncService {
     private fifo: FifoService
   ) {}
 
-  async ingestOfflineSale(businessId: string | undefined, payload: OfflineSaleDto) {
+  /**
+   * Generates a unique invoice number in format: INV-YYYYMMDDHHMMSS-XXXX
+   * where XXXX is a random 4-character alphanumeric suffix
+   */
+  private generateInvoiceNumber(): string {
+    const now = new Date();
+    const timestamp = now.toISOString()
+      .replace(/[-:]/g, '')
+      .replace('T', '')
+      .substring(0, 14); // YYYYMMDDHHMMSS
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `INV-${timestamp}-${random}`;
+  }
+
+  async ingestOfflineSale(businessId: string | undefined, userId: string | null, payload: OfflineSaleDto) {
     try {
       // Check idempotency: if temp_invoice_no already exists, return existing invoice
       if (payload.temp_invoice_no) {
@@ -39,6 +53,9 @@ export class SyncService {
         });
         if (existing) return { ok: true, invoice_id: existing.id, duplicate: true };
       }
+
+      // Generate invoice number if not provided
+      const invoiceNo = payload.temp_invoice_no || this.generateInvoiceNumber();
 
       const subtotal = payload.items.reduce((s, i) => s + (Number(i.sale_price) * Number(i.quantity)), 0);
       
@@ -49,7 +66,8 @@ export class SyncService {
         subtotal: subtotal,
         total: subtotal,
         source: payload.source || 'offline',
-        invoice_no: payload.temp_invoice_no,
+        invoice_no: invoiceNo,
+        created_by: userId,
         created_at: new Date()
       };
       await this.invoices.insert(invoice as any);

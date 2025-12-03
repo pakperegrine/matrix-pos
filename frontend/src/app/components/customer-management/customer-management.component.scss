@@ -213,6 +213,22 @@
     color: white;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   }
+
+  &.bronze {
+    background: linear-gradient(135deg, #cd7f32, #b87333);
+  }
+
+  &.silver {
+    background: linear-gradient(135deg, #c0c0c0, #a9a9a9);
+  }
+
+  &.gold {
+    background: linear-gradient(135deg, #ffd700, #e6c200);
+  }
+
+  &.platinum {
+    background: linear-gradient(135deg, #e5e4e2, #b2b2b2);
+  }
 }
 
 .badge-success {
@@ -480,6 +496,49 @@
       color: var(--text-color);
     }
   }
+}
+
+.app-modal {
+  background: var(--bg-color, #fff);
+  color: var(--text-color, #222);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  padding: 2rem 1.5rem;
+  max-width: 600px;
+  width: 100%;
+}
+
+.app-modal h3[header] {
+  color: var(--text-color, #222);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.app-modal .modal-actions {
+  background: transparent;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding-top: 1.5rem;
+}
+
+.app-modal .btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff;
+}
+
+.app-modal .btn-secondary {
+  background: var(--bg-secondary, #f3f4f6);
+  color: var(--text-color, #222);
+}
+
+.app-modal input,
+.app-modal textarea,
+.app-modal select {
+  background: var(--bg-color, #fff);
+  color: var(--text-color, #222);
+  border: 1px solid var(--border-color, #d1d5db);
 }
 
 @media (max-width: 768px) {

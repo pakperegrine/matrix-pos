@@ -1,4 +1,6 @@
-import { Entity, Column, PrimaryColumn, Index } from 'typeorm';
+import { Entity, Column, PrimaryColumn, Index, ManyToOne, JoinColumn } from 'typeorm';
+import { SaleInvoice } from './sale-invoice.entity';
+import { Product } from './product.entity';
 
 @Entity({ name: 'sale_items' })
 export class SaleItem {
@@ -9,9 +11,17 @@ export class SaleItem {
   @Column({ nullable: true })
   invoice_id: string;
 
+  @ManyToOne(() => SaleInvoice, { nullable: true })
+  @JoinColumn({ name: 'invoice_id' })
+  invoice: SaleInvoice;
+
   @Index()
   @Column({ nullable: true })
   product_id: string;
+
+  @ManyToOne(() => Product, { nullable: true })
+  @JoinColumn({ name: 'product_id' })
+  product: Product;
 
   @Column({ type: 'decimal', precision: 14, scale: 4, nullable: true })
   quantity: number;
