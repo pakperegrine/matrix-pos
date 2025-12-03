@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { LoginComponent } from './components/login/login.component';
 import { PosComponent } from './components/pos/pos.component';
 import { ProductManagementComponent } from './components/product-management/product-management.component';
 import { SalesDashboardComponent } from './components/sales-dashboard/sales-dashboard.component';
@@ -10,9 +11,11 @@ import { ReportsComponent } from './components/reports/reports.component';
 import { CurrencySettingsComponent } from './components/currency-settings/currency-settings.component';
 import { InventoryForecastingComponent } from './components/inventory-forecasting/inventory-forecasting.component';
 import { SettingsComponent } from './components/settings/settings.component';
+import { CashManagementComponent } from './components/cash-management/cash-management.component';
 
 const routes: Routes = [
-  { path: '', redirectTo: '/pos', pathMatch: 'full' },
+  { path: 'login', component: LoginComponent },
+  { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'pos', component: PosComponent },
   { path: 'products', component: ProductManagementComponent },
   { path: 'sales', component: SalesDashboardComponent },
@@ -23,7 +26,8 @@ const routes: Routes = [
   { path: 'currency', component: CurrencySettingsComponent },
   { path: 'forecasting', component: InventoryForecastingComponent },
   { path: 'settings', component: SettingsComponent },
-  { path: '**', redirectTo: '/pos' }
+  { path: 'cash-management', component: CashManagementComponent },
+  { path: '**', redirectTo: '/login' }
 ];
 
 @NgModule({

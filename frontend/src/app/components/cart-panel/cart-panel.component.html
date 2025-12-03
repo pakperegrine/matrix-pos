@@ -15,15 +15,11 @@
     <div class="empty-subtext">Add items to start a sale</div>
   </div>
   
-  <div class="cart-items" *ngIf="cart.length > 0">
-    <div *ngFor="let c of (cart || [])" class="cart-item">
+  <div class="cart-items" *ngIf="cart.length > 0" #cartItemsContainer>
+    <div *ngFor="let c of (cart || []); trackBy: trackByProductId; let last = last" class="cart-item" [class.latest-item]="last">
       <div class="item-header">
         <div class="item-info">
           <div class="item-name">{{ c.product.name }}</div>
-          <div class="item-meta">
-            <span class="unit-price">{{ c.product.price | customCurrency }} each</span>
-            <span class="item-qty-chip">×{{ c.qty }}</span>
-          </div>
         </div>
         <button class="remove-btn" (click)="onRemoveItem(c)" title="Remove item">×</button>
       </div>
@@ -32,6 +28,10 @@
           <button class="qty-btn" (click)="decreaseQty(c)">−</button>
           <span class="qty-value">{{ c.qty }}</span>
           <button class="qty-btn" (click)="increaseQty(c)">+</button>
+        </div>
+        <div class="item-price">
+          <span class="label">Price</span>
+          <span class="value">{{ c.product.price | customCurrency }}</span>
         </div>
         <div class="item-total">
           <span class="label">Line Total</span>
@@ -42,47 +42,6 @@
   </div>
   
   <div class="cart-footer" *ngIf="cart.length > 0">
-    <!-- Discount Section -->
-    <div class="discount-section" *ngIf="settingsService.isDiscountsEnabled()">
-      <div class="discount-label">💰 Discounts & Coupons</div>
-      
-      <!-- Coupon Code Input -->
-      <div class="coupon-input-group">
-        <input
-          type="text"
-          [(ngModel)]="localCouponCode"
-          (ngModelChange)="onCouponCodeChange()"
-          placeholder="Enter coupon code"
-          class="coupon-input"
-          (keyup.enter)="onApplyCoupon()"
-        />
-        <button
-          *ngIf="!localCouponCode"
-          class="apply-coupon-btn"
-          (click)="onApplyCoupon()"
-          [disabled]="validatingCoupon"
-        >
-          {{ validatingCoupon ? '...' : 'Apply' }}
-        </button>
-        <button
-          *ngIf="localCouponCode"
-          class="remove-coupon-btn"
-          (click)="onRemoveCoupon()"
-          title="Remove coupon"
-        >
-          ×
-        </button>
-      </div>
-
-      <!-- Applied Discounts -->
-      <div *ngIf="appliedDiscounts?.applied_discounts?.length ?? 0 > 0" class="applied-discounts">
-        <div *ngFor="let discount of (appliedDiscounts?.applied_discounts || [])" class="discount-item">
-          <span class="discount-name">✓ {{ discount.discount_name }}</span>
-          <span class="discount-value">-{{ discount.discount_amount | customCurrency }}</span>
-        </div>
-      </div>
-    </div>
-
     <!-- Price Breakdown -->
     <div class="subtotal-row">
       <span>Subtotal:</span>

@@ -11,7 +11,7 @@ async function bootstrap() {
     origin: ['http://localhost:4200', 'http://localhost:9090'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'x-business-id', 'x-user-id']
   });
   
   app.use(json({ limit: '1mb' }));

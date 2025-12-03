@@ -9,4 +9,9 @@ export class AuthController {
   async login(@Body() body: { email: string; password: string }) {
     return this.svc.login(body.email, body.password);
   }
+
+  @Post('signup')
+  async signup(@Body() body: { name: string; email: string; password: string; businessId?: string }) {
+    return this.svc.signup(body.name, body.email, body.password, body.businessId);
+  }
 }

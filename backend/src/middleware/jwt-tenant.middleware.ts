@@ -8,14 +8,22 @@ import * as jwt from 'jsonwebtoken';
 export function JwtTenantMiddleware(req: Request & any, res: Response, next: NextFunction) {
   const auth = req.headers['authorization'] || '';
   const token = Array.isArray(auth) ? auth[0] : (auth.startsWith('Bearer ') ? auth.slice(7) : auth);
-  if (!token) return next();
-  try {
-    const secret = process.env.JWT_SECRET || 'change_this_secret';
-    const payload = jwt.verify(token, secret) as any;
-    req.user = payload;
-    if (payload && payload.business_id) req.businessId = payload.business_id;
-  } catch (err) {
-    // invalid token — ignore and continue as unauthenticated
+  
+  if (token) {
+    try {
+      const secret = process.env.JWT_SECRET || 'change_this_secret';
+      const payload = jwt.verify(token, secret) as any;
+      req.user = payload;
+      if (payload && payload.business_id) req.businessId = payload.business_id;
+    } catch (err) {
+      // invalid token — ignore and continue as unauthenticated
+    }
+  }
+  
+  // Development convenience: if no token/businessId provided, allow a dev fallback
+  // This makes local testing easier — do NOT enable in production.
+  if (!req.businessId && process.env.NODE_ENV !== 'production') {
+    req.businessId = process.env.DEV_BUSINESS_ID || 'dev-business';
   }
   return next();
 }

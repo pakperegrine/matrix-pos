@@ -109,7 +109,7 @@
   </div>
 
   <!-- Customer Form Modal -->
-  <app-modal *ngIf="showModal" (close)="closeModal()">
+  <app-modal *ngIf="showModal" [isOpen]="showModal" (close)="closeModal()">>
     <h3 header>{{ isEditing ? 'Edit Customer' : 'Add New Customer' }}</h3>
     
     <div content class="customer-form">
@@ -200,7 +200,7 @@
   </app-modal>
 
   <!-- Customer Stats Modal -->
-  <app-modal *ngIf="showStatsModal && selectedCustomer" (close)="closeStatsModal()">
+  <app-modal *ngIf="showStatsModal && selectedCustomer" [isOpen]="showStatsModal" (close)="closeStatsModal()">
     <h3 header>Customer Statistics - {{ selectedCustomer.name }}</h3>
     
     <div content class="stats-content" *ngIf="customerStats">

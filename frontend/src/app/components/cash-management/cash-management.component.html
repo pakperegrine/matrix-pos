@@ -1,0 +1,315 @@
+<div class="cash-management-container">
+  <!-- Header -->
+  <div class="header">
+    <h1>Cash Management</h1>
+    <button class="btn-back" routerLink="/">
+      <i class="fas fa-arrow-left"></i> Back to POS
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading && !activeShift" class="loading">
+    <i class="fas fa-spinner fa-spin"></i> Loading...
+  </div>
+
+  <!-- No Active Shift -->
+  <div *ngIf="!isLoading && !activeShift" class="no-shift">
+    <div class="no-shift-card">
+      <i class="fas fa-cash-register fa-3x"></i>
+      <h2>No Active Shift</h2>
+      <p>Start a new shift to begin cash operations</p>
+      <button class="btn-primary btn-large" (click)="openOpenShiftModal()">
+        <i class="fas fa-play"></i> Open Shift
+      </button>
+    </div>
+  </div>
+
+  <!-- Active Shift Dashboard -->
+  <div *ngIf="activeShift && shiftDetails" class="shift-dashboard">
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="card-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <i class="fas fa-wallet"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-label">Expected Cash</div>
+          <div class="card-value">{{ activeShift.expectedCash | currency }}</div>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-label">Total Sales</div>
+          <div class="card-value">{{ activeShift.totalSales | currency }}</div>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+          <i class="fas fa-money-bill-wave"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-label">Cash Sales</div>
+          <div class="card-value">{{ activeShift.totalCashSales | currency }}</div>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+          <i class="fas fa-credit-card"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-label">Card Sales</div>
+          <div class="card-value">{{ activeShift.totalCardSales | currency }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button class="btn-action btn-cash-in" (click)="openCashInModal()">
+        <i class="fas fa-plus-circle"></i> Cash In
+      </button>
+      <button class="btn-action btn-cash-out" (click)="openCashOutModal()">
+        <i class="fas fa-minus-circle"></i> Cash Out
+      </button>
+      <button class="btn-action btn-cash-drop" (click)="openCashDropModal()">
+        <i class="fas fa-arrow-down"></i> Cash Drop
+      </button>
+      <button class="btn-action btn-x-report" (click)="printXReport()">
+        <i class="fas fa-file-alt"></i> X Report
+      </button>
+      <button class="btn-action btn-close-shift" (click)="openCloseShiftModal()">
+        <i class="fas fa-stop-circle"></i> Close Shift
+      </button>
+    </div>
+
+    <!-- Shift Info -->
+    <div class="shift-info">
+      <h3>Shift #{{ activeShift.shiftNumber }}</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="label">Opened:</span>
+          <span class="value">{{ activeShift.openingTime | date:'short' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Opening Float:</span>
+          <span class="value">{{ activeShift.openingFloat | currency }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Status:</span>
+          <span class="value">
+            <span class="status-badge status-{{ activeShift.status }}">{{ activeShift.status | uppercase }}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cash Movement Summary -->
+    <div class="movement-summary">
+      <h3>Cash Movements</h3>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span class="label">Cash In:</span>
+          <span class="value positive">+{{ shiftDetails.summary.totalCashIn | currency }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Cash Out:</span>
+          <span class="value negative">-{{ shiftDetails.summary.totalCashOut | currency }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Cash Drops:</span>
+          <span class="value negative">-{{ shiftDetails.summary.totalCashDrops | currency }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Movements -->
+    <div class="recent-movements">
+      <h3>Recent Movements (Current Shift)</h3>
+      <div class="movements-list">
+        <div *ngFor="let movement of getNonSaleMovements()" class="movement-item">
+          <div class="movement-icon" [ngClass]="'movement-' + movement.movementType">
+            <i class="fas" [ngClass]="{
+              'fa-arrow-up': movement.movementType === 'cash_in',
+              'fa-arrow-down': movement.movementType === 'cash_out' || movement.movementType === 'cash_drop',
+              'fa-undo': movement.movementType === 'refund'
+            }"></i>
+          </div>
+          <div class="movement-details">
+            <div class="movement-type">{{ getMovementTypeLabel(movement.movementType) }}</div>
+            <div class="movement-reason">{{ movement.reason || 'No reason provided' }}</div>
+            <div class="movement-time">{{ movement.createdAt | date:'short' }}</div>
+          </div>
+          <div class="movement-amount" [ngClass]="{
+            'positive': movement.movementType === 'cash_in',
+            'negative': movement.movementType === 'cash_out' || movement.movementType === 'cash_drop'
+          }">
+            {{ movement.movementType === 'cash_in' ? '+' : '-' }}{{ movement.amount | currency }}
+          </div>
+        </div>
+        <div *ngIf="getNonSaleMovements().length === 0" class="no-movements">
+          <p>No cash movements recorded yet for this shift.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Open Shift Modal -->
+<div class="modal-overlay" *ngIf="showOpenShiftModal" (click)="showOpenShiftModal = false">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Open Shift</h2>
+      <button class="btn-close" (click)="showOpenShiftModal = false">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Opening Float Amount</label>
+        <input type="number" [(ngModel)]="openingFloat" step="0.01" min="0" class="form-control">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="showOpenShiftModal = false">Cancel</button>
+      <button class="btn-primary" (click)="confirmOpenShift()">Open Shift</button>
+    </div>
+  </div>
+</div>
+
+<!-- Close Shift Modal -->
+<div class="modal-overlay" *ngIf="showCloseShiftModal" (click)="showCloseShiftModal = false">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Close Shift</h2>
+      <button class="btn-close" (click)="showCloseShiftModal = false">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="close-shift-summary">
+        <div class="summary-row">
+          <span>Expected Cash:</span>
+          <span class="amount">{{ activeShift?.expectedCash | currency }}</span>
+        </div>
+        <div class="form-group">
+          <label>Actual Cash Counted</label>
+          <input type="number" [(ngModel)]="actualCash" step="0.01" class="form-control">
+        </div>
+        <div class="summary-row variance-row" [ngClass]="{'positive': variance >= 0, 'negative': variance < 0}">
+          <span>Variance:</span>
+          <span class="amount">{{ variance | currency }}</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes (Optional)</label>
+        <textarea [(ngModel)]="closeNotes" rows="3" class="form-control"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="showCloseShiftModal = false">Cancel</button>
+      <button class="btn-primary" (click)="confirmCloseShift()">Close Shift</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cash In Modal -->
+<div class="modal-overlay" *ngIf="showCashInModal" (click)="showCashInModal = false">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Cash In</h2>
+      <button class="btn-close" (click)="showCashInModal = false">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Amount</label>
+        <input type="number" [(ngModel)]="cashAmount" step="0.01" min="0" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Reason</label>
+        <input type="text" [(ngModel)]="cashReason" class="form-control" placeholder="e.g., Petty cash replenishment">
+      </div>
+      <div class="form-group">
+        <label>Notes (Optional)</label>
+        <textarea [(ngModel)]="cashNotes" rows="2" class="form-control"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="showCashInModal = false">Cancel</button>
+      <button class="btn-primary" (click)="confirmCashIn()" [disabled]="!cashAmount || !cashReason">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cash Out Modal -->
+<div class="modal-overlay" *ngIf="showCashOutModal" (click)="showCashOutModal = false">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Cash Out</h2>
+      <button class="btn-close" (click)="showCashOutModal = false">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Amount</label>
+        <input type="number" [(ngModel)]="cashAmount" step="0.01" min="0" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Reason</label>
+        <input type="text" [(ngModel)]="cashReason" class="form-control" placeholder="e.g., Office supplies">
+      </div>
+      <div class="form-group">
+        <label>Notes (Optional)</label>
+        <textarea [(ngModel)]="cashNotes" rows="2" class="form-control"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="showCashOutModal = false">Cancel</button>
+      <button class="btn-primary" (click)="confirmCashOut()" [disabled]="!cashAmount || !cashReason">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cash Drop Modal -->
+<div class="modal-overlay" *ngIf="showCashDropModal" (click)="showCashDropModal = false">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Cash Drop to Safe</h2>
+      <button class="btn-close" (click)="showCashDropModal = false">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Amount to Drop</label>
+        <input type="number" [(ngModel)]="cashAmount" step="0.01" min="0" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Notes (Optional)</label>
+        <textarea [(ngModel)]="cashNotes" rows="2" class="form-control"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="showCashDropModal = false">Cancel</button>
+      <button class="btn-primary" (click)="confirmCashDrop()" [disabled]="!cashAmount">Drop Cash</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supervisor PIN Modal -->
+<div class="modal-overlay" *ngIf="showSupervisorPinModal" (click)="cancelSupervisorPin()">
+  <div class="modal modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Supervisor Approval</h2>
+      <button class="btn-close" (click)="cancelSupervisorPin()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Enter Supervisor PIN</label>
+        <input type="password" [(ngModel)]="supervisorPin" class="form-control" placeholder="****" maxlength="4" autofocus>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cancelSupervisorPin()">Cancel</button>
+      <button class="btn-primary" (click)="confirmSupervisorPin()" [disabled]="!supervisorPin">Confirm</button>
+    </div>
+  </div>
+</div>

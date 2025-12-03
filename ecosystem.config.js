@@ -5,16 +5,20 @@ module.exports = {
   apps: [
     {
       name: 'matrix-pos-backend',
-      script: './backend/dist/main.js',
-      cwd: '/var/www/matrix-pos',
-      instances: 2,  // Number of instances (use 'max' for all CPU cores)
-      exec_mode: 'cluster',
+      script: './dist/main.js',
+      cwd: 'C:/pos_repo/backend',
+      instances: 1,  // Single instance to avoid port conflicts on Windows
+      exec_mode: 'fork',
       env: {
-        NODE_ENV: 'production',
-        PORT: 3000
+        NODE_ENV: 'development',
+        PORT: 3000,
+        JWT_SECRET: 'change_this_secret',
+        DB_TYPE: 'sqlite',
+        DB_DATABASE: './dev.sqlite',
+        DEV_BUSINESS_ID: 'business-1'
       },
-      error_file: '/var/www/matrix-pos/logs/backend-error.log',
-      out_file: '/var/www/matrix-pos/logs/backend-out.log',
+      error_file: 'C:/pos_repo/logs/backend-error.log',
+      out_file: 'C:/pos_repo/logs/backend-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       merge_logs: true,
       autorestart: true,

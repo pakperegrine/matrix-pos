@@ -13,6 +13,9 @@ import { Discount } from './entities/discount.entity';
 import { Currency } from './entities/currency.entity';
 import { StockForecast } from './entities/stock-forecast.entity';
 import { Settings } from './entities/settings.entity';
+import { CashShift } from './entities/cash-shift.entity';
+import { CashMovement } from './entities/cash-movement.entity';
+import { DrawerEvent } from './entities/drawer-event.entity';
 import { ProductsModule } from './modules/products/products.module';
 import { StockBatchesModule } from './modules/stock-batches/stock-batches.module';
 import { SyncModule } from './modules/sync/sync.module';
@@ -24,6 +27,7 @@ import { CurrencyModule } from './modules/currency/currency.module';
 import { ForecastingModule } from './modules/forecasting/forecasting.module';
 import { SalesModule } from './modules/sales/sales.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { CashManagementModule } from './modules/cash-management/cash-management.module';
 import { JwtTenantMiddleware } from './middleware/jwt-tenant.middleware';
 
 @Module({
@@ -37,7 +41,7 @@ import { JwtTenantMiddleware } from './middleware/jwt-tenant.middleware';
             type: 'sqlite',
             database: process.env.DB_DATABASE || './dev.sqlite',
             synchronize: true,
-            entities: [User, Business, Product, StockBatch, SaleInvoice, SaleItem, Customer, Discount, Currency, StockForecast, Settings]
+            entities: [User, Business, Product, StockBatch, SaleInvoice, SaleItem, Customer, Discount, Currency, StockForecast, Settings, CashShift, CashMovement, DrawerEvent]
           } as any;
         }
         return {
@@ -62,7 +66,8 @@ import { JwtTenantMiddleware } from './middleware/jwt-tenant.middleware';
     CurrencyModule,
     ForecastingModule,
     SalesModule,
-    SettingsModule
+    SettingsModule,
+    CashManagementModule
   ],
   controllers: [],
   providers: []

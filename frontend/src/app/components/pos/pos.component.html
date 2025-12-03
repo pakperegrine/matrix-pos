@@ -3,7 +3,12 @@
     <div class="products-section">
       <div class="section-header">
         <h3 class="section-title">Products</h3>
-        <div class="product-count">{{ filteredProducts.length }} of {{ products.length }} items</div>
+        <div class="header-actions">
+          <button class="btn-cash-management" routerLink="/cash-management" title="Cash Management">
+            <i class="fas fa-cash-register"></i> Cash Management
+          </button>
+          <div class="product-count">{{ filteredProducts.length }} of {{ products.length }} items</div>
+        </div>
       </div>
 
       <!-- Search and Filter Bar -->
@@ -79,19 +84,10 @@
         [subtotal]="subtotal"
         [discountAmount]="discountAmount"
         [taxAmount]="taxAmount"
-        [activeDiscounts]="activeDiscounts"
-        [selectedDiscountId]="selectedDiscountId"
-        [couponCode]="couponCode"
-        [appliedDiscounts]="appliedDiscounts"
-        [validatingCoupon]="validatingCoupon"
         (updateQuantity)="updateQuantity($event)"
         (removeItem)="removeItem($event)"
         (checkout)="openCheckout()"
         (clearCart)="clearCart()"
-        (discountChange)="onDiscountChange()"
-        (applyCoupon)="applyCouponCode()"
-        (removeCoupon)="removeCoupon()"
-        (couponCodeChange)="couponCode = $event"
       ></app-cart-panel>
     </div>
   </div>
@@ -108,7 +104,7 @@
     <div class="checkout-content">
       <div class="checkout-summary">
         <h4>Order Summary</h4>
-          <div class="summary-items" *ngIf="(cart || []).length > 0">
+          <!-- <div class="summary-items" *ngIf="(cart || []).length > 0">
             <div *ngFor="let item of (cart || [])" class="summary-item">
               <div class="summary-item-name">
                 {{ item.product.name }}
@@ -116,7 +112,7 @@
               </div>
               <div class="summary-item-amount">{{ (item.product.price * item.qty) | customCurrency }}</div>
             </div>
-          </div>
+          </div> -->
         <div class="summary-subtotal" *ngIf="discountAmount > 0">
           <span>Subtotal (before discount)</span>
           <span>{{ subtotal | customCurrency }}</span>
@@ -124,12 +120,6 @@
         <div class="summary-discount" *ngIf="discountAmount > 0">
           <span class="discount-label">Discount:</span>
           <span class="discount-value">-{{ discountAmount | customCurrency }}</span>
-        </div>
-        <div *ngIf="appliedDiscounts?.applied_discounts?.length ?? 0 > 0" class="applied-discounts-list">
-          <div *ngFor="let discount of (appliedDiscounts?.applied_discounts || [])" class="discount-detail">
-            <span>• {{ discount.discount_name }}</span>
-            <span>-{{ discount.discount_amount | customCurrency }}</span>
-          </div>
         </div>
         <div class="summary-tax" *ngIf="settingsService.isTaxEnabled()">
           <span>{{ settingsService.getTaxLabel() }} ({{ settingsService.getTaxRate() }}%):</span>
@@ -144,15 +134,77 @@
         </div>
       </div>
 
+      <!-- Discount Section -->
+      <div class="discount-section" *ngIf="settingsService.isDiscountsEnabled()">
+        <h4>💰 Discounts & Coupons</h4>
+        
+        <!-- Coupon Code Input -->
+        <div class="coupon-input-group">
+          <input
+            type="text"
+            [(ngModel)]="couponCode"
+            placeholder="Enter coupon code"
+            class="coupon-input"
+            (keyup.enter)="applyCouponCode()"
+          />
+          <button
+            *ngIf="!couponCode"
+            class="apply-coupon-btn"
+            (click)="applyCouponCode()"
+            [disabled]="validatingCoupon"
+          >
+            {{ validatingCoupon ? '...' : 'Apply' }}
+          </button>
+          <button
+            *ngIf="couponCode"
+            class="remove-coupon-btn"
+            (click)="removeCoupon()"
+            title="Remove coupon"
+          >
+            ×
+          </button>
+        </div>
+
+        <!-- Applied Discounts -->
+        <div *ngIf="appliedDiscountsList.length > 0" class="applied-discounts">
+          <div *ngFor="let discount of appliedDiscountsList" class="discount-item">
+            <span class="discount-name">✓ {{ discount.discount_name }}</span>
+            <span class="discount-value">-{{ discount.discount_amount | customCurrency }}</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Customer Selection -->
       <div class="customer-section" *ngIf="settingsService.isCustomerSelectionEnabled()">
         <h4>Customer <span *ngIf="settingsService.isCustomerRequired()" class="required">*</span></h4>
-        <select class="customer-select" [(ngModel)]="selectedCustomerId">
-          <option value="">Walk-in Customer</option>
-          <option *ngFor="let customer of (customers || [])" [value]="customer.id">
-            {{ customer.name }} - {{ customer.phone || customer.email }}
-          </option>
-        </select>
+        <ng-select
+          [(ngModel)]="selectedCustomerId"
+          [items]="customers"
+          bindLabel="name"
+          bindValue="id"
+          [searchable]="true"
+          [clearable]="true"
+          [loading]="customersLoading"
+          placeholder="Select or search customer..."
+          (search)="onCustomerSearch($event.term)"
+          class="customer-ng-select"
+        >
+          <ng-template ng-option-tmp let-item="item">
+            <div class="customer-option">
+              <div class="customer-name">{{ item.name }}</div>
+              <div class="customer-details">
+                <span *ngIf="item.phone">📞 {{ item.phone }}</span>
+                <span *ngIf="item.email && !item.phone">📧 {{ item.email }}</span>
+                <span *ngIf="item.customer_type" class="customer-type-badge">{{ item.customer_type }}</span>
+              </div>
+            </div>
+          </ng-template>
+          <ng-template ng-label-tmp let-item="item">
+            <div class="selected-customer">
+              {{ item.name }} <span class="customer-contact">- {{ item.phone || item.email }}</span>
+            </div>
+          </ng-template>
+        </ng-select>
         <div *ngIf="settingsService.isCustomerRequired() && !selectedCustomerId" class="required-note">
           ⚠️ Customer selection is required
         </div>

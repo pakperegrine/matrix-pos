@@ -15,7 +15,7 @@ export class CustomersController {
 
   // Helper to get business_id (replace with JWT extraction later)
   private getBusinessId(req: any): string {
-    return req.user?.business_id || 'default-business-id';
+    return req.businessId || req.user?.business_id || 'business-1';
   }
 
   @Get()

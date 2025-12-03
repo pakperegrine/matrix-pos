@@ -4,9 +4,11 @@ import { SyncService } from '../../services/sync.service';
 import { ToastService } from '../../services/toast.service';
 import { SettingsService } from '../../services/settings.service';
 import { Product } from '../../models/product';
-import { Discount, DiscountResult } from '../../models/discount';
+import { Discount, DiscountResult, DiscountCalculation } from '../../models/discount';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 interface CartItem {
   product: Product;
@@ -45,6 +47,13 @@ export class PosComponent implements OnInit {
   validatingCoupon: boolean = false;
   selectedCustomerId: string = '';
   customers: any[] = [];
+  customersLoading: boolean = false;
+  customersInput$ = new Subject<string>();
+
+  // Getter for safe access to applied discounts array
+  get appliedDiscountsList(): DiscountCalculation[] {
+    return this.appliedDiscounts?.applied_discounts || [];
+  }
 
   constructor(
     private db: DexieService,
@@ -60,6 +69,13 @@ export class PosComponent implements OnInit {
     
     // Load customers (will be shown conditionally in template based on settings)
     this.loadCustomers();
+
+    // Setup customer search
+    this.customersInput$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(term => this.searchCustomers(term))
+    ).subscribe();
   }
 
   async loadProducts(): Promise<void> {
@@ -170,24 +186,41 @@ export class PosComponent implements OnInit {
       });
   }
 
-  loadCustomers(): void {
-    this.http.get<any>(`${environment.apiUrl}/customers`)
+  loadCustomers(search: string = ''): void {
+    this.customersLoading = true;
+    const params = search ? `?search=${encodeURIComponent(search)}` : '';
+    
+    this.http.get<any>(`${environment.apiUrl}/customers${params}`)
       .subscribe({
         next: (customersResponse) => {
+          console.log('Customers API response:', customersResponse);
           if (Array.isArray(customersResponse)) {
             this.customers = customersResponse;
+          } else if (customersResponse && Array.isArray(customersResponse?.customers)) {
+            this.customers = customersResponse.customers;
           } else if (customersResponse && Array.isArray(customersResponse?.data)) {
             this.customers = customersResponse.data;
           } else {
             console.warn('Customers response was not an array. Falling back to empty list.', customersResponse);
             this.customers = [];
           }
+          this.customersLoading = false;
         },
         error: (error) => {
           console.error('Error loading customers:', error);
-          this.customers = []; // Ensure it's always an array
+          this.customers = [];
+          this.customersLoading = false;
         }
       });
+  }
+
+  searchCustomers(term: string) {
+    this.loadCustomers(term);
+    return [];
+  }
+
+  onCustomerSearch(term: string) {
+    this.customersInput$.next(term);
   }
 
   addToCart(p: Product) {
@@ -198,6 +231,8 @@ export class PosComponent implements OnInit {
       this.cart.push({ product: p, qty: 1 });
     }
     this.toastService.success(`${p.name} added to cart`);
+    // Auto-calculate discounts for automatic discounts
+    this.calculateDiscounts();
   }
 
   updateQuantity(event: { product: any; qty: number }) {
@@ -205,11 +240,15 @@ export class PosComponent implements OnInit {
     if (found) {
       found.qty = event.qty;
     }
+    // Recalculate discounts when quantity changes
+    this.calculateDiscounts();
   }
 
   removeItem(product: any) {
     this.cart = this.cart.filter(c => c.product.id !== product.id);
     this.toastService.info(`${product.name} removed from cart`);
+    // Recalculate discounts when item is removed
+    this.calculateDiscounts();
   }
 
   clearCart() {
@@ -220,7 +259,7 @@ export class PosComponent implements OnInit {
     this.toastService.info('Cart cleared');
   }
 
-  async calculateDiscounts(): Promise<void> {
+  async calculateDiscounts(silent: boolean = true): Promise<void> {
     if (this.cart.length === 0) {
       this.appliedDiscounts = null;
       return;
@@ -247,7 +286,8 @@ export class PosComponent implements OnInit {
 
       this.appliedDiscounts = result || null;
 
-      if (result && result.applied_discounts.length > 0) {
+      // Only show toast if not silent (manual coupon application)
+      if (!silent && result && result.applied_discounts.length > 0) {
         const discountNames = result.applied_discounts.map(d => d.discount_name).join(', ');
         this.toastService.success(
           `Applied: ${discountNames}`,
@@ -256,7 +296,9 @@ export class PosComponent implements OnInit {
       }
     } catch (error) {
       console.error('Error calculating discounts:', error);
-      this.toastService.error('Failed to calculate discounts');
+      if (!silent) {
+        this.toastService.error('Failed to calculate discounts');
+      }
     }
   }
 
@@ -280,7 +322,7 @@ export class PosComponent implements OnInit {
 
       if (validation.valid) {
         this.toastService.success(`Coupon "${this.couponCode}" applied!`);
-        await this.calculateDiscounts();
+        await this.calculateDiscounts(false); // Show toast for manual coupon application
       } else {
         this.toastService.error(validation.message || 'Invalid coupon code', 'Coupon Error');
         this.couponCode = '';
@@ -446,6 +488,13 @@ export class PosComponent implements OnInit {
       return;
     }
 
+    // Get customer name
+    const selectedCustomer = this.customers.find(c => c.id === this.selectedCustomerId);
+    const customerName = selectedCustomer ? selectedCustomer.name : 'Walk-in Customer';
+    const customerInfo = selectedCustomer && (selectedCustomer.phone || selectedCustomer.email) 
+      ? `${selectedCustomer.phone || selectedCustomer.email}` 
+      : '';
+
     const discountLines = this.appliedDiscounts?.applied_discounts.map(d => `
       <tr>
         <td colspan="2">${d.discount_name}</td>
@@ -487,6 +536,9 @@ export class PosComponent implements OnInit {
         ${businessInfo}
         ${this.settingsService.getReceiptHeader() ? `<div class="center">${this.settingsService.getReceiptHeader()}</div>` : '<div class="center">Receipt</div>'}
         <div class="center">${new Date().toLocaleString()}</div>
+        <hr>
+        <div class="center"><strong>Customer: ${customerName}</strong></div>
+        ${customerInfo ? `<div class="center">${customerInfo}</div>` : ''}
         <hr>
         <table>
           ${this.cart.map(c => `

@@ -22,14 +22,44 @@
           font-weight: 600;
           margin: 0;
         }
+
+        .header-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+
+          .btn-cash-management {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            &:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+            }
+
+            i {
+              font-size: 1rem;
+            }
+          }
         
-        .product-count {
-          background: var(--bg-tertiary);
-          padding: 6px 12px;
-          border-radius: 20px;
-          font-size: 0.875rem;
-          color: var(--text-secondary);
-          font-weight: 500;
+          .product-count {
+            background: var(--bg-tertiary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+          }
         }
       }
 
@@ -346,6 +376,147 @@
     }
   }
   
+  .discount-section {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    
+    h4 {
+      margin: 0 0 1rem 0;
+      color: var(--text-primary);
+      font-size: 1.125rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .coupon-input-group {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      
+      .coupon-input {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        font-weight: 600;
+        background: white;
+        color: var(--text-primary);
+        transition: all 0.2s;
+        
+        &:focus {
+          outline: none;
+          border-color: var(--primary);
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        &::placeholder {
+          text-transform: none;
+          font-weight: normal;
+          color: var(--text-tertiary);
+        }
+      }
+      
+      .apply-coupon-btn {
+        padding: 0.75rem 1.5rem;
+        background: linear-gradient(135deg, var(--primary) 0%, #5b21b6 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        
+        &:hover:not(:disabled) {
+          background: linear-gradient(135deg, #5b21b6 0%, var(--primary) 100%);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+        
+        &:active:not(:disabled) {
+          transform: translateY(0);
+        }
+        
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+      
+      .remove-coupon-btn {
+        width: 44px;
+        height: 44px;
+        background: #fee2e2;
+        color: #ef4444;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.5rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        &:hover {
+          background: #fecaca;
+          transform: scale(1.05);
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+        
+        &:active {
+          transform: scale(0.95);
+        }
+      }
+    }
+    
+    .applied-discounts {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      
+      .discount-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+        border-radius: 8px;
+        border: 1px solid rgba(34, 197, 94, 0.25);
+        transition: all 0.2s;
+        
+        &:hover {
+          transform: translateX(4px);
+          box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+        }
+        
+        .discount-name {
+          font-size: 0.9rem;
+          color: #059669;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        
+        .discount-value {
+          font-size: 1rem;
+          color: #059669;
+          font-weight: 700;
+        }
+      }
+    }
+  }
+  
   .customer-section {
     margin-bottom: 1.5rem;
     
@@ -358,6 +529,68 @@
       .required {
         color: #dc2626;
         font-size: 1rem;
+      }
+    }
+    
+    .customer-ng-select {
+      ::ng-deep {
+        .ng-select-container {
+          border: 2px solid var(--border-color);
+          border-radius: 8px;
+          min-height: 44px;
+          
+          &:hover {
+            border-color: var(--primary);
+          }
+        }
+        
+        .ng-select.ng-select-focused .ng-select-container {
+          border-color: var(--primary);
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .ng-value-container {
+          padding: 0.5rem 1rem;
+        }
+        
+        .ng-placeholder {
+          color: var(--text-tertiary);
+        }
+      }
+    }
+    
+    .customer-option {
+      padding: 0.25rem 0;
+      
+      .customer-name {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+      }
+      
+      .customer-details {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        
+        .customer-type-badge {
+          background: rgba(99, 102, 241, 0.1);
+          color: var(--primary);
+          padding: 0.15rem 0.5rem;
+          border-radius: 12px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+      }
+    }
+    
+    .selected-customer {
+      .customer-contact {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
       }
     }
     

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Req, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Req, Param, UnauthorizedException } from '@nestjs/common';
 import { ProductsService } from './products.service';
 
 @Controller('products')
@@ -14,28 +14,28 @@ export class ProductsController {
   @Get(':id')
   async getOne(@Req() req: any, @Param('id') id: string) {
     const businessId = req.businessId;
-    if (!businessId) throw new Error('Missing business_id in token');
+    if (!businessId) throw new UnauthorizedException('Missing business_id in token');
     return this.svc.findOne(id, businessId);
   }
 
   @Post()
   async create(@Req() req: any, @Body() body: any) {
     const businessId = req.businessId;
-    if (!businessId) throw new Error('Missing business_id in token');
+    if (!businessId) throw new UnauthorizedException('Missing business_id in token');
     return this.svc.create(businessId, body);
   }
 
   @Put(':id')
   async update(@Req() req: any, @Param('id') id: string, @Body() body: any) {
     const businessId = req.businessId;
-    if (!businessId) throw new Error('Missing business_id in token');
+    if (!businessId) throw new UnauthorizedException('Missing business_id in token');
     return this.svc.update(id, businessId, body);
   }
 
   @Delete(':id')
   async remove(@Req() req: any, @Param('id') id: string) {
     const businessId = req.businessId;
-    if (!businessId) throw new Error('Missing business_id in token');
+    if (!businessId) throw new UnauthorizedException('Missing business_id in token');
     return this.svc.remove(id, businessId);
   }
 }

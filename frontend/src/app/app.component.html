@@ -1,6 +1,6 @@
 <div class="app-shell">
   <!-- Vertical Sidebar -->
-  <aside class="sidebar">
+  <aside class="sidebar" *ngIf="showSidebar">
     <div class="sidebar-header">
       <div class="logo-icon">M</div>
       <div class="logo-text">
@@ -54,19 +54,22 @@
 
     <div class="sidebar-footer">
       <div class="user-info">
-        <div class="user-avatar">A</div>
+        <div class="user-avatar">{{ userName.charAt(0).toUpperCase() }}</div>
         <div class="user-details">
-          <div class="user-name">Admin</div>
-          <div class="user-role">Administrator</div>
+          <div class="user-name">{{ userName }}</div>
+          <div class="user-role">{{ userRole }}</div>
         </div>
       </div>
+      <button class="logout-btn" (click)="logout()" title="Logout">
+        <span>🚪</span>
+      </button>
     </div>
   </aside>
 
   <!-- Main Content Area -->
-  <div class="app-main">
+  <div class="app-main" [class.no-sidebar]="!showSidebar">
     <!-- Top Header Bar -->
-    <header class="app-header">
+    <header class="app-header" *ngIf="showSidebar">
       <div class="header-content">
         <h2 class="page-title">{{ pageTitle }}</h2>
         <div class="header-actions">

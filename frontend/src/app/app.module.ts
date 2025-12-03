@@ -1,7 +1,9 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { PosComponent } from './components/pos/pos.component';
@@ -22,7 +24,9 @@ import { ReportsComponent } from './components/reports/reports.component';
 import { CurrencySettingsComponent } from './components/currency-settings/currency-settings.component';
 import { InventoryForecastingComponent } from './components/inventory-forecasting/inventory-forecasting.component';
 import { SettingsComponent } from './components/settings/settings.component';
+import { CashManagementComponent } from './components/cash-management/cash-management.component';
 import { CustomCurrencyPipe } from './pipes/custom-currency.pipe';
+import { LoginComponent } from './components/login/login.component';
 
 @NgModule({
   declarations: [
@@ -45,12 +49,16 @@ import { CustomCurrencyPipe } from './pipes/custom-currency.pipe';
     CurrencySettingsComponent,
     InventoryForecastingComponent,
     SettingsComponent,
-    CustomCurrencyPipe
+    CashManagementComponent,
+    CustomCurrencyPipe,
+    LoginComponent
   ],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     FormsModule,
     HttpClientModule,
+    NgSelectModule,
     AppRoutingModule
   ],
   providers: [],

@@ -1,5 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnChanges } from '@angular/core';
-import { Discount, DiscountResult } from '../../models/discount';
+import { Component, Input, Output, EventEmitter, AfterViewChecked } from '@angular/core';
 import { SettingsService } from '../../services/settings.service';
 
 interface CartItem {
@@ -12,7 +11,7 @@ interface CartItem {
   templateUrl: './cart-panel.component.html',
   styleUrls: ['./cart-panel.component.scss']
 })
-export class CartPanelComponent implements OnChanges {
+export class CartPanelComponent implements AfterViewChecked {
   // Make Array available in template
   Array = Array;
   
@@ -21,30 +20,26 @@ export class CartPanelComponent implements OnChanges {
   @Input() total: number = 0;
   @Input() discountAmount: number = 0;
   @Input() taxAmount: number = 0;
-  @Input() activeDiscounts: Discount[] = [];
-  @Input() selectedDiscountId: string = '';
-  @Input() couponCode: string = '';
-  @Input() appliedDiscounts: DiscountResult | null = null;
-  @Input() validatingCoupon: boolean = false;
   
   @Output() updateQuantity = new EventEmitter<{ product: any; qty: number }>();
   @Output() removeItem = new EventEmitter<any>();
   @Output() checkout = new EventEmitter<void>();
   @Output() clearCart = new EventEmitter<void>();
-  @Output() discountChange = new EventEmitter<string>();
-  @Output() applyCoupon = new EventEmitter<void>();
-  @Output() removeCoupon = new EventEmitter<void>();
-  @Output() couponCodeChange = new EventEmitter<string>();
-
-  localCouponCode: string = '';
 
   constructor(public settingsService: SettingsService) {}
 
-  ngOnChanges() {
-    // Sync local coupon code with input
-    if (this.couponCode !== this.localCouponCode) {
-      this.localCouponCode = this.couponCode;
+  ngAfterViewChecked() {
+    // Scroll to the last item when cart changes
+    if (this.cart.length > 0) {
+      const cartItems = document.querySelector('.cart-items');
+      if (cartItems) {
+        cartItems.scrollTop = cartItems.scrollHeight;
+      }
     }
+  }
+
+  trackByProductId(index: number, item: any): any {
+    return item.product.id;
   }
 
   get totalItems(): number {
@@ -53,10 +48,6 @@ export class CartPanelComponent implements OnChanges {
 
   get averagePerItem(): number {
     return this.totalItems > 0 ? this.total / this.totalItems : 0;
-  }
-
-  onCouponCodeChange(): void {
-    this.couponCodeChange.emit(this.localCouponCode);
   }
 
   increaseQty(item: CartItem): void {
@@ -81,17 +72,5 @@ export class CartPanelComponent implements OnChanges {
 
   onClearCart(): void {
     this.clearCart.emit();
-  }
-
-  onDiscountChange(event: any): void {
-    this.discountChange.emit(event.target.value);
-  }
-
-  onApplyCoupon(): void {
-    this.applyCoupon.emit();
-  }
-
-  onRemoveCoupon(): void {
-    this.removeCoupon.emit();
   }
 }
