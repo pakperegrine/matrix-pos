@@ -47,6 +47,10 @@ export class SaleInvoice {
   @Column({ nullable: true })
   created_by: string;
 
+  @Index()
+  @Column({ type: 'date', nullable: true })
+  sale_date: string;
+
   @Column({ type: 'datetime', nullable: true })
   created_at: Date;
 }

@@ -25,6 +25,7 @@ import { CurrencySettingsComponent } from './components/currency-settings/curren
 import { InventoryForecastingComponent } from './components/inventory-forecasting/inventory-forecasting.component';
 import { SettingsComponent } from './components/settings/settings.component';
 import { CashManagementComponent } from './components/cash-management/cash-management.component';
+import { OwnerDashboardComponent } from './components/owner-dashboard/owner-dashboard.component';
 import { CustomCurrencyPipe } from './pipes/custom-currency.pipe';
 import { LoginComponent } from './components/login/login.component';
 
@@ -50,6 +51,7 @@ import { LoginComponent } from './components/login/login.component';
     InventoryForecastingComponent,
     SettingsComponent,
     CashManagementComponent,
+    OwnerDashboardComponent,
     CustomCurrencyPipe,
     LoginComponent
   ],

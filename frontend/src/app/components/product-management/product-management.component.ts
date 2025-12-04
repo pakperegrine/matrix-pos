@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { ToastService } from '../../services/toast.service';
 import { TableColumn, TableData } from '../shared/table/table.component';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
+import { LocationService } from '../../services/location.service';
 
 interface Product {
   id: string;
@@ -30,6 +31,9 @@ export class ProductManagementComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
   private apiUrl = 'http://localhost:3000/api';
+  
+  // Location filtering
+  selectedLocationId: string | null = null;
 
   columns: TableColumn[] = [
     { key: 'name', label: 'Product Name', sortable: true },
@@ -76,18 +80,40 @@ export class ProductManagementComponent implements OnInit, OnDestroy {
 
   constructor(
     private http: HttpClient,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private locationService: LocationService
   ) {}
 
   ngOnInit(): void {
+    // Subscribe to location changes
+    this.locationService.selectedLocation$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(location => {
+        this.selectedLocationId = location?.id || null;
+        this.loadProducts();
+      });
+    
     this.loadProducts();
+  }
+
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('auth_token');
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    });
   }
 
   // ✅ LOAD PRODUCTS
   loadProducts(page: number = 1): void {
     this.loading = true;
+    
+    const params: any = {};
+    if (this.selectedLocationId) {
+      params.location_id = this.selectedLocationId;
+    }
 
-    this.http.get<Product[]>(`${this.apiUrl}/products`)
+    this.http.get<Product[]>(`${this.apiUrl}/products`, { params, headers: this.getHeaders() })
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.loading = false)
@@ -176,8 +202,8 @@ export class ProductManagementComponent implements OnInit, OnDestroy {
     };
 
     const request$ = this.isEditMode
-      ? this.http.put(`${this.apiUrl}/products/${this.currentProduct.id}`, productData)
-      : this.http.post(`${this.apiUrl}/products`, productData);
+      ? this.http.put(`${this.apiUrl}/products/${this.currentProduct.id}`, productData, { headers: this.getHeaders() })
+      : this.http.post(`${this.apiUrl}/products`, productData, { headers: this.getHeaders() });
 
     request$
       .pipe(finalize(() => this.savingProduct = false))
@@ -199,7 +225,7 @@ export class ProductManagementComponent implements OnInit, OnDestroy {
 
     this.deletingProduct = true;
 
-    this.http.delete(`${this.apiUrl}/products/${this.currentProduct.id}`)
+    this.http.delete(`${this.apiUrl}/products/${this.currentProduct.id}`, { headers: this.getHeaders() })
       .pipe(finalize(() => this.deletingProduct = false))
       .subscribe({
         next: () => {

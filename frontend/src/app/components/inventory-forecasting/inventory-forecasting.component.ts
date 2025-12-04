@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { LocationService } from '../../services/location.service';
+import { Subscription } from 'rxjs';
 
 interface Forecast {
   id: string;
@@ -32,8 +34,12 @@ interface ReorderSuggestion {
   templateUrl: './inventory-forecasting.component.html',
   styleUrls: ['./inventory-forecasting.component.scss']
 })
-export class InventoryForecastingComponent implements OnInit {
+export class InventoryForecastingComponent implements OnInit, OnDestroy {
   activeTab: string = 'overview';
+  
+  // Location filtering
+  selectedLocationId: string | null = null;
+  private locationSubscription?: Subscription;
   
   // Data
   forecasts: Forecast[] = [];
@@ -53,15 +59,35 @@ export class InventoryForecastingComponent implements OnInit {
   // Products map (for display names)
   productsMap: Map<string, any> = new Map();
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private locationService: LocationService
+  ) {}
 
   ngOnInit() {
+    // Subscribe to location changes
+    this.locationSubscription = this.locationService.selectedLocation$.subscribe(location => {
+      this.selectedLocationId = location?.id || null;
+      this.loadAllData();
+    });
+    
     this.loadProducts();
     this.loadAllData();
   }
+  
+  ngOnDestroy() {
+    if (this.locationSubscription) {
+      this.locationSubscription.unsubscribe();
+    }
+  }
 
   loadProducts() {
-    this.http.get<any[]>(`${environment.apiUrl}/products`)
+    const params: any = {};
+    if (this.selectedLocationId) {
+      params.location_id = this.selectedLocationId;
+    }
+    
+    this.http.get<any[]>(`${environment.apiUrl}/products`, { params })
       .subscribe({
         next: (products) => {
           products.forEach(p => this.productsMap.set(p.id, p));
@@ -80,7 +106,12 @@ export class InventoryForecastingComponent implements OnInit {
 
   loadForecasts() {
     this.loading = true;
-    this.http.get<Forecast[]>(`${environment.apiUrl}/forecasting/products`)
+    const params: any = {};
+    if (this.selectedLocationId) {
+      params.location_id = this.selectedLocationId;
+    }
+    
+    this.http.get<Forecast[]>(`${environment.apiUrl}/forecasting/products`, { params })
       .subscribe({
         next: (data) => {
           this.forecasts = data;
@@ -94,7 +125,12 @@ export class InventoryForecastingComponent implements OnInit {
   }
 
   loadReorderSuggestions() {
-    this.http.get<ReorderSuggestion[]>(`${environment.apiUrl}/forecasting/reorder-suggestions`)
+    const params: any = {};
+    if (this.selectedLocationId) {
+      params.location_id = this.selectedLocationId;
+    }
+    
+    this.http.get<ReorderSuggestion[]>(`${environment.apiUrl}/forecasting/reorder-suggestions`, { params })
       .subscribe({
         next: (data) => {
           this.reorderSuggestions = data;
@@ -104,7 +140,12 @@ export class InventoryForecastingComponent implements OnInit {
   }
 
   loadLowStockAlerts() {
-    this.http.get<Forecast[]>(`${environment.apiUrl}/forecasting/low-stock?days=${this.filterDays}`)
+    const params: any = { days: this.filterDays };
+    if (this.selectedLocationId) {
+      params.location_id = this.selectedLocationId;
+    }
+    
+    this.http.get<Forecast[]>(`${environment.apiUrl}/forecasting/low-stock`, { params })
       .subscribe({
         next: (data) => {
           this.lowStockAlerts = data;
@@ -114,7 +155,12 @@ export class InventoryForecastingComponent implements OnInit {
   }
 
   loadSeasonalProducts() {
-    this.http.get<Forecast[]>(`${environment.apiUrl}/forecasting/seasonal`)
+    const params: any = {};
+    if (this.selectedLocationId) {
+      params.location_id = this.selectedLocationId;
+    }
+    
+    this.http.get<Forecast[]>(`${environment.apiUrl}/forecasting/seasonal`, { params })
       .subscribe({
         next: (data) => {
           this.seasonalProducts = data;
@@ -124,7 +170,12 @@ export class InventoryForecastingComponent implements OnInit {
   }
 
   loadTrendAnalysis() {
-    this.http.get<any>(`${environment.apiUrl}/forecasting/trends`)
+    const params: any = {};
+    if (this.selectedLocationId) {
+      params.location_id = this.selectedLocationId;
+    }
+    
+    this.http.get<any>(`${environment.apiUrl}/forecasting/trends`, { params })
       .subscribe({
         next: (data) => {
           this.trendAnalysis = data;

@@ -16,6 +16,9 @@ import { Settings } from './entities/settings.entity';
 import { CashShift } from './entities/cash-shift.entity';
 import { CashMovement } from './entities/cash-movement.entity';
 import { DrawerEvent } from './entities/drawer-event.entity';
+import { Location } from './entities/location.entity';
+import { UserSession } from './entities/user-session.entity';
+import { BusinessStatistic } from './entities/business-statistic.entity';
 import { ProductsModule } from './modules/products/products.module';
 import { StockBatchesModule } from './modules/stock-batches/stock-batches.module';
 import { SyncModule } from './modules/sync/sync.module';
@@ -28,6 +31,8 @@ import { ForecastingModule } from './modules/forecasting/forecasting.module';
 import { SalesModule } from './modules/sales/sales.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { CashManagementModule } from './modules/cash-management/cash-management.module';
+import { LocationsModule } from './modules/locations/locations.module';
+import { OwnerModule } from './modules/owner/owner.module';
 import { JwtTenantMiddleware } from './middleware/jwt-tenant.middleware';
 
 @Module({
@@ -41,7 +46,7 @@ import { JwtTenantMiddleware } from './middleware/jwt-tenant.middleware';
             type: 'sqlite',
             database: process.env.DB_DATABASE || './dev.sqlite',
             synchronize: true,
-            entities: [User, Business, Product, StockBatch, SaleInvoice, SaleItem, Customer, Discount, Currency, StockForecast, Settings, CashShift, CashMovement, DrawerEvent]
+            entities: [User, Business, Product, StockBatch, SaleInvoice, SaleItem, Customer, Discount, Currency, StockForecast, Settings, CashShift, CashMovement, DrawerEvent, Location, UserSession, BusinessStatistic]
           } as any;
         }
         return {
@@ -51,8 +56,9 @@ import { JwtTenantMiddleware } from './middleware/jwt-tenant.middleware';
           username: process.env.DB_USERNAME || 'root',
           password: process.env.DB_PASSWORD || '',
           database: process.env.DB_DATABASE || 'matrix_pos',
-          synchronize: false,
-          entities: [User, Business, Product, StockBatch, SaleInvoice, SaleItem, Customer, Discount, Currency, StockForecast, Settings]
+          synchronize: true,  // Enabled to create schema from entities
+          logging: false,
+          entities: [User, Business, Product, StockBatch, SaleInvoice, SaleItem, Customer, Discount, Currency, StockForecast, Settings, CashShift, CashMovement, DrawerEvent, Location, UserSession, BusinessStatistic]
           } as any;
       }
     }),
@@ -67,7 +73,9 @@ import { JwtTenantMiddleware } from './middleware/jwt-tenant.middleware';
     ForecastingModule,
     SalesModule,
     SettingsModule,
-    CashManagementModule
+    CashManagementModule,
+    LocationsModule,
+    OwnerModule
   ],
   controllers: [],
   providers: []

@@ -59,7 +59,10 @@ export class LoginComponent {
         localStorage.setItem('businessId', response.user.business_id || 'business-1');
         
         this.toastService.success(`Welcome back, ${response.user.name || response.user.email}!`);
-        this.router.navigate(['/pos']);
+        
+        // Redirect based on role
+        const redirectPath = response.user.role === 'owner' ? '/owner' : '/pos';
+        this.router.navigate([redirectPath]);
       },
       error: (error) => {
         this.loading = false;
@@ -96,7 +99,10 @@ export class LoginComponent {
         localStorage.setItem('businessId', response.user.business_id || 'business-1');
         
         this.toastService.success(`Welcome to Matrix POS, ${response.user.name}!`);
-        this.router.navigate(['/pos']);
+        
+        // Redirect based on role
+        const redirectPath = response.user.role === 'owner' ? '/owner' : '/pos';
+        this.router.navigate([redirectPath]);
       },
       error: (error) => {
         this.loading = false;

@@ -26,6 +26,7 @@ export class CustomersController {
     @Query('is_active') is_active?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
+    @Query('location_id') locationId?: string,
   ) {
     const businessId = this.getBusinessId(req);
     return this.customersService.findAll(businessId, {
@@ -34,6 +35,7 @@ export class CustomersController {
       is_active: is_active ? parseInt(is_active) : undefined,
       limit: limit ? parseInt(limit) : 50,
       offset: offset ? parseInt(offset) : 0,
+      location_id: locationId,
     });
   }
 

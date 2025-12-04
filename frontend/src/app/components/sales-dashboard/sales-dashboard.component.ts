@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ToastService } from '../../services/toast.service';
+import { LocationService } from '../../services/location.service';
+import { Subscription } from 'rxjs';
 
 interface SalesSummary {
   todaySales: number;
@@ -38,11 +40,15 @@ interface RecentTransaction {
   templateUrl: './sales-dashboard.component.html',
   styleUrls: ['./sales-dashboard.component.scss']
 })
-export class SalesDashboardComponent implements OnInit {
+export class SalesDashboardComponent implements OnInit, OnDestroy {
   private apiUrl = 'http://localhost:3000/api';
   
   loading: boolean = false;
   period: 'today' | 'week' | 'month' = 'today';
+  
+  // Location filtering
+  selectedLocationId: string | null = null;
+  private locationSubscription?: Subscription;
   
   summary: SalesSummary = {
     todaySales: 0,
@@ -64,23 +70,34 @@ export class SalesDashboardComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private locationService: LocationService
   ) {}
 
   private getHeaders() {
-    const businessId = localStorage.getItem('businessId') || 'default_business';
+    const token = localStorage.getItem('auth_token');
     return {
       headers: {
-        'x-business-id': businessId
-      },
-      params: {
-        businessId: businessId
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
       }
     };
   }
 
   ngOnInit(): void {
+    // Subscribe to location changes
+    this.locationSubscription = this.locationService.selectedLocation$.subscribe(location => {
+      this.selectedLocationId = location?.id || null;
+      this.loadDashboardData();
+    });
+    
     this.loadDashboardData();
+  }
+  
+  ngOnDestroy(): void {
+    if (this.locationSubscription) {
+      this.locationSubscription.unsubscribe();
+    }
   }
 
   async loadDashboardData(): Promise<void> {
@@ -102,8 +119,18 @@ export class SalesDashboardComponent implements OnInit {
 
   async loadSummary(): Promise<void> {
     try {
-      // For now, we'll calculate from transactions since backend doesn't have summary endpoint
-      const invoices = await this.http.get<any[]>(`${this.apiUrl}/sales`, this.getHeaders()).toPromise() || [];
+      // Build URL with location filter if selected
+      let url = `${this.apiUrl}/sales`;
+      const params: any = {};
+      
+      if (this.selectedLocationId) {
+        params.location_id = this.selectedLocationId;
+      }
+      
+      const invoices = await this.http.get<any[]>(url, { 
+        ...this.getHeaders(),
+        params 
+      }).toPromise() || [];
       
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -146,7 +173,12 @@ export class SalesDashboardComponent implements OnInit {
 
   async loadChartData(): Promise<void> {
     try {
-      const invoices = await this.http.get<any[]>(`${this.apiUrl}/sales`, this.getHeaders()).toPromise() || [];
+      const params: any = {};
+      if (this.selectedLocationId) {
+        params.location_id = this.selectedLocationId;
+      }
+      
+      const invoices = await this.http.get<any[]>(`${this.apiUrl}/sales`, { ...this.getHeaders(), params }).toPromise() || [];
       
       // Generate labels based on period
       const labels: string[] = [];
@@ -216,8 +248,13 @@ export class SalesDashboardComponent implements OnInit {
 
   async loadTopProducts(): Promise<void> {
     try {
+      const params: any = {};
+      if (this.selectedLocationId) {
+        params.location_id = this.selectedLocationId;
+      }
+      
       // We'll need to aggregate from sale items
-      const items = await this.http.get<any[]>(`${this.apiUrl}/sales`, this.getHeaders()).toPromise() || [];
+      const items = await this.http.get<any[]>(`${this.apiUrl}/sales`, { ...this.getHeaders(), params }).toPromise() || [];
       
       const productMap = new Map<string, TopProduct>();
       
@@ -234,7 +271,12 @@ export class SalesDashboardComponent implements OnInit {
 
   async loadRecentTransactions(): Promise<void> {
     try {
-      const invoices = await this.http.get<any[]>(`${this.apiUrl}/sales`, this.getHeaders()).toPromise() || [];
+      const params: any = {};
+      if (this.selectedLocationId) {
+        params.location_id = this.selectedLocationId;
+      }
+      
+      const invoices = await this.http.get<any[]>(`${this.apiUrl}/sales`, { ...this.getHeaders(), params }).toPromise() || [];
       
       this.recentTransactions = invoices
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())

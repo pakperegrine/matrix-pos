@@ -1,0 +1,489 @@
+<div class="owner-dashboard">
+  <div class="dashboard-header">
+    <h1>Owner Dashboard</h1>
+    <div class="header-actions">
+      <select [(ngModel)]="selectedLocation" (change)="onLocationChange()" class="form-control location-select">
+        <option value="">All Locations</option>
+        <option *ngFor="let loc of locations" [value]="loc.id">{{ loc.name }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="dashboard-tabs">
+    <button 
+      [class.active]="activeTab === 'dashboard'" 
+      (click)="setActiveTab('dashboard')"
+      class="tab-btn">
+      <i class="icon-dashboard"></i> Dashboard
+    </button>
+    <button 
+      [class.active]="activeTab === 'locations'" 
+      (click)="setActiveTab('locations')"
+      class="tab-btn">
+      <i class="icon-location"></i> Locations
+    </button>
+    <button 
+      [class.active]="activeTab === 'users'" 
+      (click)="setActiveTab('users')"
+      class="tab-btn">
+      <i class="icon-users"></i> Users
+    </button>
+    <button 
+      [class.active]="activeTab === 'reports'" 
+      (click)="setActiveTab('reports')"
+      class="tab-btn">
+      <i class="icon-reports"></i> Reports
+    </button>
+    <button 
+      [class.active]="activeTab === 'settings'" 
+      (click)="setActiveTab('settings')"
+      class="tab-btn">
+      <i class="icon-settings"></i> Settings
+    </button>
+  </div>
+
+  <!-- Dashboard Tab -->
+  <div *ngIf="activeTab === 'dashboard'" class="tab-content">
+    <div *ngIf="loading" class="loading">Loading...</div>
+    <div *ngIf="error" class="error">{{ error }}</div>
+    
+    <div *ngIf="dashboardStats" class="dashboard-content">
+      <!-- Overview Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon locations"></div>
+          <div class="stat-info">
+            <h3>{{ dashboardStats.overview?.total_locations || 0 }}</h3>
+            <p>Total Locations</p>
+            <span class="stat-meta">{{ dashboardStats.overview?.active_locations || 0 }} active</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon users"></div>
+          <div class="stat-info">
+            <h3>{{ dashboardStats.overview?.total_users || 0 }}</h3>
+            <p>Active Users</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon products"></div>
+          <div class="stat-info">
+            <h3>{{ dashboardStats.overview?.total_products || 0 }}</h3>
+            <p>Total Products</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today's Performance -->
+      <div class="performance-section">
+        <h2>Today's Performance</h2>
+        <div class="stats-grid">
+          <div class="stat-card highlight">
+            <div class="stat-icon sales"></div>
+            <div class="stat-info">
+              <h3>${{ dashboardStats.today?.sales?.toFixed(2) || '0.00' }}</h3>
+              <p>Today's Sales</p>
+              <span class="stat-meta">{{ dashboardStats.today?.transactions || 0 }} transactions</span>
+            </div>
+          </div>
+
+          <div class="stat-card highlight">
+            <div class="stat-icon profit"></div>
+            <div class="stat-info">
+              <h3>${{ dashboardStats.today?.profit?.toFixed(2) || '0.00' }}</h3>
+              <p>Today's Profit</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- This Month's Performance -->
+      <div class="performance-section">
+        <h2>This Month's Performance</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-info">
+              <h3>${{ dashboardStats.this_month?.sales?.toFixed(2) || '0.00' }}</h3>
+              <p>Month's Sales</p>
+              <span class="stat-meta">{{ dashboardStats.this_month?.transactions || 0 }} transactions</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-info">
+              <h3>${{ dashboardStats.this_month?.profit?.toFixed(2) || '0.00' }}</h3>
+              <p>Month's Profit</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location Stats (if showing all locations) -->
+      <div *ngIf="!selectedLocation && dashboardStats.location_stats?.length > 0" class="location-stats-section">
+        <h2>Location Performance (Today)</h2>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Location</th>
+                <th>Sales</th>
+                <th>Transactions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let loc of dashboardStats.location_stats">
+                <td>{{ loc.location_name }}</td>
+                <td>${{ loc.today_sales?.toFixed(2) || '0.00' }}</td>
+                <td>{{ loc.today_transactions || 0 }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Locations Tab -->
+  <div *ngIf="activeTab === 'locations'" class="tab-content">
+    <div class="content-header">
+      <h2>Manage Locations</h2>
+      <button (click)="openLocationModal()" class="btn btn-primary">
+        <i class="icon-plus"></i> Add Location
+      </button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Code</th>
+            <th>Address</th>
+            <th>Manager</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let location of locations">
+            <td>{{ location.name }}</td>
+            <td>{{ location.code }}</td>
+            <td>{{ location.city }}, {{ location.state }}</td>
+            <td>{{ getManagerName(location.manager_id) }}</td>
+            <td>
+              <span class="badge" [ngClass]="getStatusBadgeClass(location.status)">
+                {{ location.status }}
+              </span>
+            </td>
+            <td>
+              <button (click)="openLocationModal(location)" class="btn btn-sm btn-info">Edit</button>
+              <button *ngIf="location.status === 'active'" 
+                      (click)="updateLocationStatus(location.id, 'inactive')" 
+                      class="btn btn-sm btn-warning">Deactivate</button>
+              <button *ngIf="location.status === 'inactive'" 
+                      (click)="updateLocationStatus(location.id, 'active')" 
+                      class="btn btn-sm btn-success">Activate</button>
+              <button (click)="deleteLocation(location.id)" 
+                      class="btn btn-sm btn-danger">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Users Tab -->
+  <div *ngIf="activeTab === 'users'" class="tab-content">
+    <div class="content-header">
+      <h2>Manage Users</h2>
+      <button (click)="openUserModal()" class="btn btn-primary">
+        <i class="icon-plus"></i> Add User
+      </button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Last Login</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users">
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>
+              <span class="badge" [ngClass]="getRoleBadgeClass(user.role)">
+                {{ user.role }}
+              </span>
+            </td>
+            <td>{{ getLocationName(user.location_id) }}</td>
+            <td>
+              <span class="badge" [ngClass]="getStatusBadgeClass(user.status)">
+                {{ user.status }}
+              </span>
+            </td>
+            <td>{{ user.last_login ? (user.last_login | date:'short') : 'Never' }}</td>
+            <td>
+              <button (click)="openUserModal(user)" class="btn btn-sm btn-info">Edit</button>
+              <button *ngIf="user.status === 'active'" 
+                      (click)="updateUserStatus(user.id, 'inactive')" 
+                      class="btn btn-sm btn-warning">Deactivate</button>
+              <button *ngIf="user.status === 'inactive'" 
+                      (click)="updateUserStatus(user.id, 'active')" 
+                      class="btn btn-sm btn-success">Activate</button>
+              <button (click)="deleteUser(user.id)" 
+                      class="btn btn-sm btn-danger">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Reports Tab -->
+  <div *ngIf="activeTab === 'reports'" class="tab-content">
+    <div class="content-header">
+      <h2>Sales Reports</h2>
+      <div class="report-filters">
+        <input type="date" [(ngModel)]="reportStartDate" class="form-control" />
+        <input type="date" [(ngModel)]="reportEndDate" class="form-control" />
+        <button (click)="loadSalesReport()" class="btn btn-primary">Generate Report</button>
+      </div>
+    </div>
+
+    <div *ngIf="loading" class="loading">Loading report...</div>
+    
+    <div *ngIf="salesReportData" class="report-content">
+      <!-- Summary Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>${{ salesReportData.summary?.total_sales?.toFixed(2) || '0.00' }}</h3>
+          <p>Total Sales</p>
+        </div>
+        <div class="stat-card">
+          <h3>{{ salesReportData.summary?.total_transactions || 0 }}</h3>
+          <p>Transactions</p>
+        </div>
+        <div class="stat-card">
+          <h3>${{ salesReportData.summary?.total_profit?.toFixed(2) || '0.00' }}</h3>
+          <p>Total Profit</p>
+        </div>
+        <div class="stat-card">
+          <h3>${{ salesReportData.summary?.avg_transaction?.toFixed(2) || '0.00' }}</h3>
+          <p>Avg Transaction</p>
+        </div>
+      </div>
+
+      <!-- Daily Breakdown -->
+      <div class="daily-breakdown">
+        <h3>Daily Breakdown</h3>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Sales</th>
+                <th>Transactions</th>
+                <th>Profit</th>
+                <th>Avg Transaction</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let day of salesReportData.daily_breakdown">
+                <td>{{ day.date }}</td>
+                <td>${{ day.sales?.toFixed(2) }}</td>
+                <td>{{ day.transactions }}</td>
+                <td>${{ day.profit?.toFixed(2) }}</td>
+                <td>${{ day.avg_transaction?.toFixed(2) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Tab -->
+  <div *ngIf="activeTab === 'settings'" class="tab-content">
+    <div class="content-header">
+      <h2>Business Settings</h2>
+    </div>
+
+    <div *ngIf="businessInfo" class="settings-form">
+      <div class="form-group">
+        <label>Business Name</label>
+        <input type="text" [(ngModel)]="businessInfo.name" class="form-control" readonly />
+      </div>
+      <div class="form-group">
+        <label>Business Type</label>
+        <input type="text" [(ngModel)]="businessInfo.business_type" class="form-control" readonly />
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <span class="badge" [ngClass]="getStatusBadgeClass(businessInfo.status)">
+          {{ businessInfo.status }}
+        </span>
+      </div>
+      <div class="form-group">
+        <label>Subscription Plan</label>
+        <input type="text" [(ngModel)]="businessInfo.subscription_plan" class="form-control" readonly />
+      </div>
+      <div class="form-group">
+        <label>Registration Date</label>
+        <input type="text" [value]="businessInfo.registration_date | date:'medium'" class="form-control" readonly />
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Location Modal -->
+<div class="modal" *ngIf="showLocationModal">
+  <div class="modal-overlay" (click)="closeLocationModal()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>{{ editingLocation ? 'Edit Location' : 'Add New Location' }}</h2>
+      <button class="close-btn" (click)="closeLocationModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Name <span class="required">*</span></label>
+        <input type="text" [(ngModel)]="locationForm.name" class="form-control" placeholder="Enter location name" />
+      </div>
+      
+      <div class="form-group">
+        <label>Code <span class="required">*</span></label>
+        <input type="text" [(ngModel)]="locationForm.code" class="form-control" placeholder="e.g., LOC001" />
+      </div>
+      
+      <div class="form-group">
+        <label>Address</label>
+        <input type="text" [(ngModel)]="locationForm.address" class="form-control" placeholder="Street address" />
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" [(ngModel)]="locationForm.city" class="form-control" placeholder="City" />
+        </div>
+        
+        <div class="form-group">
+          <label>State</label>
+          <input type="text" [(ngModel)]="locationForm.state" class="form-control" placeholder="State" />
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Country</label>
+          <input type="text" [(ngModel)]="locationForm.country" class="form-control" placeholder="Country" />
+        </div>
+        
+        <div class="form-group">
+          <label>Postal Code</label>
+          <input type="text" [(ngModel)]="locationForm.postal_code" class="form-control" placeholder="Postal code" />
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="tel" [(ngModel)]="locationForm.phone" class="form-control" placeholder="Phone number" />
+      </div>
+      
+      <div class="form-group">
+        <label>Manager</label>
+        <select [(ngModel)]="locationForm.manager_id" class="form-control">
+          <option value="">Unassigned</option>
+          <option *ngFor="let user of getEligibleManagers()" [value]="user.id">
+            {{ user.name }} ({{ user.role }})
+          </option>
+        </select>
+        <small class="form-text">Only active Managers and Admins can be assigned</small>
+      </div>
+      
+      <div class="form-group">
+        <label>Status</label>
+        <select [(ngModel)]="locationForm.status" class="form-control">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="closed">Closed</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button (click)="closeLocationModal()" class="btn btn-secondary">Cancel</button>
+      <button (click)="saveLocation()" class="btn btn-primary">
+        {{ editingLocation ? 'Update' : 'Create' }} Location
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- User Modal -->
+<div class="modal" *ngIf="showUserModal">
+  <div class="modal-overlay" (click)="closeUserModal()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>{{ editingUser ? 'Edit User' : 'Add New User' }}</h2>
+      <button class="close-btn" (click)="closeUserModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Name <span class="required">*</span></label>
+        <input type="text" [(ngModel)]="userForm.name" class="form-control" placeholder="Full name" />
+      </div>
+      
+      <div class="form-group">
+        <label>Email <span class="required">*</span></label>
+        <input type="email" [(ngModel)]="userForm.email" class="form-control" placeholder="email@example.com" />
+      </div>
+      
+      <div class="form-group">
+        <label>Password {{ editingUser ? '(leave blank to keep current)' : '*' }}</label>
+        <input type="password" [(ngModel)]="userForm.password" class="form-control" placeholder="Password" />
+      </div>
+      
+      <div class="form-group">
+        <label>Role</label>
+        <select [(ngModel)]="userForm.role" class="form-control">
+          <option value="cashier">Cashier</option>
+          <option value="manager">Manager</option>
+          <option value="admin">Admin</option>
+          <option value="owner">Owner</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Assigned Location</label>
+        <select [(ngModel)]="userForm.location_id" class="form-control">
+          <option value="">All Locations</option>
+          <option *ngFor="let loc of locations" [value]="loc.id">{{ loc.name }}</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Status</label>
+        <select [(ngModel)]="userForm.status" class="form-control">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="suspended">Suspended</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button (click)="closeUserModal()" class="btn btn-secondary">Cancel</button>
+      <button (click)="saveUser()" class="btn btn-primary">
+        {{ editingUser ? 'Update' : 'Create' }} User
+      </button>
+    </div>
+  </div>
+</div>

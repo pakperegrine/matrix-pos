@@ -7,7 +7,7 @@ export class DiscountsController {
   constructor(private readonly discountsService: DiscountsService) {}
 
   private getBusinessId(req: any): string {
-    return req.user?.business_id || 'default-business-id';
+    return req.businessId || req.user?.business_id || 'default-business-id';
   }
 
   @Get()
@@ -15,11 +15,13 @@ export class DiscountsController {
     @Req() req: any,
     @Query('is_active') is_active?: string,
     @Query('discount_type') discount_type?: string,
+    @Query('location_id') locationId?: string,
   ) {
     const businessId = this.getBusinessId(req);
     return this.discountsService.findAll(businessId, {
       is_active: is_active ? parseInt(is_active) : undefined,
       discount_type,
+      location_id: locationId,
     });
   }
 

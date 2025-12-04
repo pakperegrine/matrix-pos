@@ -1,17 +1,25 @@
-import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Discount, BulkTier } from '../../models/discount';
+import { LocationService } from '../../services/location.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-discount-management',
   templateUrl: './discount-management.component.html',
   styleUrls: ['./discount-management.component.scss']
 })
-export class DiscountManagementComponent implements OnInit {
+export class DiscountManagementComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+  
   discounts: Discount[] = [];
   filteredDiscounts: Discount[] = [];
   paginatedDiscounts: Discount[] = [];
+  
+  // Location filtering
+  selectedLocationId: string | null = null;
   
   // Filters
   searchTerm: string = '';
@@ -56,14 +64,43 @@ export class DiscountManagementComponent implements OnInit {
 
   private apiUrl = `${environment.apiUrl}/discounts`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private locationService: LocationService
+  ) {}
 
   ngOnInit(): void {
+    // Subscribe to location changes
+    this.locationService.selectedLocation$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(location => {
+        this.selectedLocationId = location?.id || null;
+        this.loadDiscounts();
+      });
+    
     this.loadDiscounts();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('auth_token');
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    });
+  }
+
   loadDiscounts(): void {
-    this.http.get<{ discounts: Discount[]; total: number }>(this.apiUrl)
+    const params: any = {};
+    if (this.selectedLocationId) {
+      params.location_id = this.selectedLocationId;
+    }
+    
+    this.http.get<{ discounts: Discount[]; total: number }>(this.apiUrl, { params, headers: this.getHeaders() })
       .subscribe({
         next: (response) => {
           this.discounts = response.discounts;
@@ -156,7 +193,7 @@ export class DiscountManagementComponent implements OnInit {
     }
     
     if (this.editMode && discountData.id) {
-      this.http.put<Discount>(`${this.apiUrl}/${discountData.id}`, discountData)
+      this.http.put<Discount>(`${this.apiUrl}/${discountData.id}`, discountData, { headers: this.getHeaders() })
         .subscribe({
           next: () => {
             this.loadDiscounts();
@@ -165,7 +202,7 @@ export class DiscountManagementComponent implements OnInit {
           error: (error) => console.error('Error updating discount:', error)
         });
     } else {
-      this.http.post<Discount>(this.apiUrl, discountData)
+      this.http.post<Discount>(this.apiUrl, discountData, { headers: this.getHeaders() })
         .subscribe({
           next: () => {
             this.loadDiscounts();
@@ -178,7 +215,7 @@ export class DiscountManagementComponent implements OnInit {
 
   deleteDiscount(id: string): void {
     if (confirm('Are you sure you want to delete this discount?')) {
-      this.http.delete(`${this.apiUrl}/${id}`)
+      this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getHeaders() })
         .subscribe({
           next: () => this.loadDiscounts(),
           error: (error) => console.error('Error deleting discount:', error)
@@ -188,7 +225,7 @@ export class DiscountManagementComponent implements OnInit {
 
   toggleStatus(discount: Discount): void {
     const updatedDiscount = { ...discount, is_active: !discount.is_active };
-    this.http.put(`${this.apiUrl}/${discount.id}`, updatedDiscount)
+    this.http.put(`${this.apiUrl}/${discount.id}`, updatedDiscount, { headers: this.getHeaders() })
       .subscribe({
         next: () => this.loadDiscounts(),
         error: (error) => console.error('Error toggling status:', error)

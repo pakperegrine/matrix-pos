@@ -7,6 +7,13 @@ import { StockBatch } from '../../entities/stock-batch.entity';
 export class StockBatchesService {
   constructor(@InjectRepository(StockBatch) private repo: Repository<StockBatch>) {}
 
+  async findAll(businessId: string, productId?: string, locationId?: string) {
+    const where: any = { business_id: businessId };
+    if (productId) where.product_id = productId;
+    if (locationId) where.location_id = locationId;
+    return this.repo.find({ where, order: { created_at: 'ASC' } });
+  }
+
   async findAllForProduct(productId: string) {
     return this.repo.find({ where: { product_id: productId }, order: { created_at: 'ASC' } });
   }

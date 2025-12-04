@@ -8,9 +8,11 @@ import { v4 as uuid } from 'uuid';
 export class ProductsService {
   constructor(@InjectRepository(Product) private repo: Repository<Product>) {}
 
-  async findAll(businessId?: string) {
-    if (businessId) return this.repo.find({ where: { business_id: businessId } });
-    return this.repo.find();
+  async findAll(businessId?: string, locationId?: string) {
+    const where: any = {};
+    if (businessId) where.business_id = businessId;
+    if (locationId) where.location_id = locationId;
+    return this.repo.find({ where });
   }
 
   async findOne(id: string, businessId: string) {

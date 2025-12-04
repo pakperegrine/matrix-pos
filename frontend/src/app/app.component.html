@@ -10,43 +10,68 @@
     </div>
     
     <nav class="sidebar-nav">
-      <a routerLink="/pos" routerLinkActive="active" class="nav-item">
+      <!-- Owner Dashboard - Only for Owner role -->
+      <a *ngIf="hasMenuAccess('owner')" routerLink="/owner" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">👑</span>
+        <span class="nav-label">Owner Dashboard</span>
+      </a>
+      
+      <!-- POS - All except Owner -->
+      <a *ngIf="hasMenuAccess('pos')" routerLink="/pos" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">🛒</span>
         <span class="nav-label">POS</span>
       </a>
-      <a routerLink="/products" routerLinkActive="active" class="nav-item">
+      
+      <!-- Products -->
+      <a *ngIf="hasMenuAccess('products')" routerLink="/products" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">📦</span>
         <span class="nav-label">Products</span>
       </a>
-      <a routerLink="/sales" routerLinkActive="active" class="nav-item">
+      
+      <!-- Sales -->
+      <a *ngIf="hasMenuAccess('sales')" routerLink="/sales" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">📊</span>
         <span class="nav-label">Sales</span>
       </a>
-      <a routerLink="/customers" routerLinkActive="active" class="nav-item">
+      
+      <!-- Customers -->
+      <a *ngIf="hasMenuAccess('customers')" routerLink="/customers" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">👥</span>
         <span class="nav-label">Customers</span>
       </a>
-      <a routerLink="/discounts" routerLinkActive="active" class="nav-item">
+      
+      <!-- Discounts - Admin, Manager, Owner -->
+      <a *ngIf="hasMenuAccess('discounts')" routerLink="/discounts" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">🏷️</span>
         <span class="nav-label">Discounts</span>
       </a>
-      <a routerLink="/reports" routerLinkActive="active" class="nav-item">
+      
+      <!-- Reports -->
+      <a *ngIf="hasMenuAccess('reports')" routerLink="/reports" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">📈</span>
         <span class="nav-label">Reports</span>
       </a>
-      <a routerLink="/forecasting" routerLinkActive="active" class="nav-item">
+      
+      <!-- Forecasting - Admin, Owner -->
+      <a *ngIf="hasMenuAccess('forecasting')" routerLink="/forecasting" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">🔮</span>
         <span class="nav-label">Forecasting</span>
       </a>
-      <a routerLink="/sync" routerLinkActive="active" class="nav-item">
+      
+      <!-- Sync - Admin only -->
+      <a *ngIf="hasMenuAccess('sync')" routerLink="/sync" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">🔄</span>
         <span class="nav-label">Sync</span>
       </a>
-      <a routerLink="/currency" routerLinkActive="active" class="nav-item">
+      
+      <!-- Currency - Admin, Owner -->
+      <a *ngIf="hasMenuAccess('currency')" routerLink="/currency" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">💱</span>
         <span class="nav-label">Currency</span>
       </a>
-      <a routerLink="/settings" routerLinkActive="active" class="nav-item">
+      
+      <!-- Settings - Admin, Owner -->
+      <a *ngIf="hasMenuAccess('settings')" routerLink="/settings" routerLinkActive="active" class="nav-item">
         <span class="nav-icon">⚙️</span>
         <span class="nav-label">Settings</span>
       </a>
@@ -73,6 +98,24 @@
       <div class="header-content">
         <h2 class="page-title">{{ pageTitle }}</h2>
         <div class="header-actions">
+          <!-- Location Selector for Owners -->
+          <div class="location-selector" *ngIf="showLocationSelector">
+            <label for="locationSelect">
+              <span class="location-icon">📍</span>
+              <span class="location-label">Location:</span>
+            </label>
+            <select 
+              id="locationSelect" 
+              class="location-dropdown"
+              [value]="selectedLocation?.id || 'all'"
+              (change)="onLocationChange($event)">
+              <option value="all">All Locations</option>
+              <option *ngFor="let location of locations" [value]="location.id">
+                {{ location.name }} ({{ location.code }})
+              </option>
+            </select>
+          </div>
+          
           <app-sync-status></app-sync-status>
           <app-theme-toggle></app-theme-toggle>
           <button class="header-btn" title="Notifications">

@@ -9,6 +9,9 @@ export class Customer {
   @Column('uuid')
   business_id: string;
 
+  @Column({ type: 'uuid', nullable: true })
+  location_id: string;
+
   @Column({ type: 'varchar', length: 255 })
   name: string;
 

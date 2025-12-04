@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { Customer, CustomerStatistics } from '../../models/customer';
 import { ToastService } from '../../services/toast.service';
+import { LocationService } from '../../services/location.service';
 
 @Component({
   selector: 'app-customer-management',
@@ -13,6 +14,9 @@ import { ToastService } from '../../services/toast.service';
 export class CustomerManagementComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private apiUrl = 'http://localhost:3000/api';
+  
+  // Location filtering
+  selectedLocationId: string | null = null;
 
   customers: Customer[] = [];
   filteredCustomers: Customer[] = [];
@@ -52,16 +56,33 @@ export class CustomerManagementComponent implements OnInit, OnDestroy {
 
   constructor(
     private http: HttpClient,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private locationService: LocationService
   ) {}
 
   ngOnInit(): void {
+    // Subscribe to location changes
+    this.locationService.selectedLocation$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(location => {
+        this.selectedLocationId = location?.id || null;
+        this.loadCustomers();
+      });
+    
     this.loadCustomers();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('auth_token');
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    });
   }
 
   getEmptyCustomer(): Customer {
@@ -88,8 +109,9 @@ export class CustomerManagementComponent implements OnInit, OnDestroy {
     if (this.searchQuery) params.search = this.searchQuery;
     if (this.filterType !== 'all') params.customer_type = this.filterType;
     if (this.filterActive !== 'all') params.is_active = this.filterActive === 'active' ? 1 : 0;
+    if (this.selectedLocationId) params.location_id = this.selectedLocationId;
 
-    this.http.get<any>(`${this.apiUrl}/customers`, { params })
+    this.http.get<any>(`${this.apiUrl}/customers`, { params, headers: this.getHeaders() })
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.loading = false)
@@ -149,7 +171,8 @@ export class CustomerManagementComponent implements OnInit, OnDestroy {
 
     try {
       const stats = await this.http.get<CustomerStatistics>(
-        `${this.apiUrl}/customers/${customer.id}/statistics`
+        `${this.apiUrl}/customers/${customer.id}/statistics`,
+        { headers: this.getHeaders() }
       ).toPromise();
       this.customerStats = stats || null;
     } catch (error) {
@@ -204,12 +227,12 @@ export class CustomerManagementComponent implements OnInit, OnDestroy {
 
     try {
       if (this.isEditing && this.customerForm.id) {
-        await this.http.put(`${this.apiUrl}/customers/${this.customerForm.id}`, payload)
+        await this.http.put(`${this.apiUrl}/customers/${this.customerForm.id}`, payload, { headers: this.getHeaders() })
           .pipe(finalize(() => this.savingCustomer = false))
           .toPromise();
         this.toastService.success('Customer updated successfully', 'Success');
       } else {
-        await this.http.post(`${this.apiUrl}/customers`, payload)
+        await this.http.post(`${this.apiUrl}/customers`, payload, { headers: this.getHeaders() })
           .pipe(finalize(() => this.savingCustomer = false))
           .toPromise();
         this.toastService.success('Customer created successfully', 'Success');
@@ -259,7 +282,7 @@ export class CustomerManagementComponent implements OnInit, OnDestroy {
     this.deletingCustomer = true;
 
     try {
-      await this.http.delete(`${this.apiUrl}/customers/${customer.id}`)
+      await this.http.delete(`${this.apiUrl}/customers/${customer.id}`, { headers: this.getHeaders() })
         .pipe(finalize(() => this.deletingCustomer = false))
         .toPromise();
 

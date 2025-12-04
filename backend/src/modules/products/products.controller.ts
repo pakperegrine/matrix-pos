@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Req, Param, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Req, Param, Query, UnauthorizedException } from '@nestjs/common';
 import { ProductsService } from './products.service';
 
 @Controller('products')
@@ -6,9 +6,9 @@ export class ProductsController {
   constructor(private svc: ProductsService) {}
 
   @Get()
-  async list(@Req() req: any) {
+  async list(@Req() req: any, @Query('location_id') locationId?: string) {
     const businessId = req.businessId;
-    return this.svc.findAll(businessId);
+    return this.svc.findAll(businessId, locationId);
   }
 
   @Get(':id')

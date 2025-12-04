@@ -30,10 +30,15 @@ export class DiscountsService {
     options: {
       is_active?: number;
       discount_type?: string;
+      location_id?: string;
     },
   ) {
     const query = this.discountRepository.createQueryBuilder('discount');
     query.where('discount.business_id = :businessId', { businessId });
+
+    if (options.location_id) {
+      query.andWhere('discount.location_id = :locationId', { locationId: options.location_id });
+    }
 
     if (options.is_active !== undefined) {
       query.andWhere('discount.is_active = :is_active', {

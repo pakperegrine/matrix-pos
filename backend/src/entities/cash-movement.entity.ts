@@ -15,6 +15,9 @@ export class CashMovement {
   @Column({ type: 'varchar', length: 255, name: 'business_id' })
   businessId: string;
 
+  @Column({ type: 'varchar', length: 36, nullable: true, name: 'location_id' })
+  locationId: string;
+
   @Column({ type: 'varchar', length: 20, name: 'movement_type' })
   movementType: 'cash_in' | 'cash_out' | 'cash_drop' | 'sale' | 'refund';
 

@@ -12,6 +12,7 @@ import { CurrencySettingsComponent } from './components/currency-settings/curren
 import { InventoryForecastingComponent } from './components/inventory-forecasting/inventory-forecasting.component';
 import { SettingsComponent } from './components/settings/settings.component';
 import { CashManagementComponent } from './components/cash-management/cash-management.component';
+import { OwnerDashboardComponent } from './components/owner-dashboard/owner-dashboard.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -27,6 +28,7 @@ const routes: Routes = [
   { path: 'forecasting', component: InventoryForecastingComponent },
   { path: 'settings', component: SettingsComponent },
   { path: 'cash-management', component: CashManagementComponent },
+  { path: 'owner', component: OwnerDashboardComponent },
   { path: '**', redirectTo: '/login' }
 ];
 

@@ -18,10 +18,15 @@ export class CustomersService {
       is_active?: number;
       limit?: number;
       offset?: number;
+      location_id?: string;
     },
   ) {
     const query = this.customerRepository.createQueryBuilder('customer');
     query.where('customer.business_id = :businessId', { businessId });
+
+    if (options.location_id) {
+      query.andWhere('customer.location_id = :locationId', { locationId: options.location_id });
+    }
 
     if (options.search) {
       query.andWhere(

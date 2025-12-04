@@ -9,6 +9,9 @@ export class Discount {
   @Column('uuid')
   business_id: string;
 
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  location_id: string;
+
   @Column({ type: 'varchar', length: 255 })
   name: string;
 

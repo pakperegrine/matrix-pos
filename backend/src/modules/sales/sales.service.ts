@@ -13,9 +13,13 @@ export class SalesService {
     private itemRepo: Repository<SaleItem>,
   ) {}
 
-  async findAll(businessId: string): Promise<SaleInvoice[]> {
+  async findAll(businessId: string, locationId?: string): Promise<SaleInvoice[]> {
+    const where: any = { business_id: businessId };
+    if (locationId) {
+      where.location_id = locationId;
+    }
     return this.invoiceRepo.find({
-      where: { business_id: businessId },
+      where,
       order: { created_at: 'DESC' },
     });
   }
@@ -32,9 +36,9 @@ export class SalesService {
     return Array.isArray(saved) ? saved[0] : saved;
   }
 
-  async update(id: string, data: any): Promise<SaleInvoice> {
-    await this.invoiceRepo.update(id, data);
-    return this.invoiceRepo.findOne({ where: { id } }) as Promise<SaleInvoice>;
+  async update(id: string, businessId: string, data: any): Promise<SaleInvoice> {
+    await this.invoiceRepo.update({ id, business_id: businessId }, data);
+    return this.invoiceRepo.findOne({ where: { id, business_id: businessId } }) as Promise<SaleInvoice>;
   }
 
   async delete(id: string, businessId: string): Promise<void> {

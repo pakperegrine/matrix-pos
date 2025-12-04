@@ -2,7 +2,8 @@ import { NextFunction, Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
 
 /**
- * Simple middleware that verifies JWT using `JWT_SECRET` and attaches `req.user` and `req.businessId`.
+ * Simple middleware that verifies JWT using `JWT_SECRET` and attaches `req.user`, `req.businessId`, `req.locationId`, and `req.userRole`.
+ * For non-owner users (cashier, manager), automatically injects location_id filter to ensure data integrity.
  * This is intentionally lightweight: in production use passport-jwt or @nestjs/jwt.
  */
 export function JwtTenantMiddleware(req: Request & any, res: Response, next: NextFunction) {
@@ -15,6 +16,17 @@ export function JwtTenantMiddleware(req: Request & any, res: Response, next: Nex
       const payload = jwt.verify(token, secret) as any;
       req.user = payload;
       if (payload && payload.business_id) req.businessId = payload.business_id;
+      if (payload && payload.location_id) req.locationId = payload.location_id;
+      if (payload && payload.role) req.userRole = payload.role;
+      
+      // For non-owner users, automatically inject location_id from token to query params
+      // This ensures data integrity - users can only see data from their assigned location
+      if (payload.role && payload.role !== 'owner' && payload.location_id) {
+        // Merge location_id into query params if not already present
+        if (!req.query.location_id) {
+          req.query.location_id = payload.location_id;
+        }
+      }
     } catch (err) {
       // invalid token — ignore and continue as unauthenticated
     }

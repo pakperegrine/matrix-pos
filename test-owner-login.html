@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Owner Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        pre {
+            background: #333;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Owner Login & Role-Based Menu</h1>
+    
+    <h2>Step 1: Test Login API</h2>
+    <button onclick="testLogin()">Test Owner Login API</button>
+    <div id="loginResult" class="result"></div>
+
+    <h2>Step 2: Test Menu Access Logic</h2>
+    <button onclick="testMenuLogic()">Test hasMenuAccess() Logic</button>
+    <div id="menuResult" class="result"></div>
+
+    <h2>Step 3: Simulated Menu Items</h2>
+    <div id="menuSimulation" class="result"></div>
+
+    <script>
+        let currentRole = 'admin';
+        let userData = null;
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '<p>Testing login...</p>';
+
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'owner@pos.com',
+                        password: 'Owner123*'
+                    })
+                });
+
+                const data = await response.json();
+                userData = data.user;
+                currentRole = data.user.role || 'admin';
+
+                resultDiv.innerHTML = `
+                    <p class="success">✓ Login successful!</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    <p><strong>Role detected:</strong> ${currentRole}</p>
+                `;
+
+                // Auto-test menu logic
+                testMenuLogic();
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">✗ Login failed!</p>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+
+        function hasMenuAccess(menuItem) {
+            const rolePermissions = {
+                'owner': ['owner', 'reports', 'settings', 'products', 'customers', 'discounts', 'forecasting', 'currency', 'sales'],
+                'admin': ['reports', 'settings', 'products', 'customers', 'discounts', 'forecasting', 'currency', 'sales', 'sync', 'pos'],
+                'manager': ['pos', 'products', 'sales', 'customers', 'discounts', 'reports'],
+                'cashier': ['pos', 'sales', 'customers']
+            };
+
+            const allowedMenus = rolePermissions[currentRole] || rolePermissions['cashier'];
+            return allowedMenus.includes(menuItem);
+        }
+
+        function testMenuLogic() {
+            const resultDiv = document.getElementById('menuResult');
+            const menuSimDiv = document.getElementById('menuSimulation');
+
+            const allMenuItems = [
+                { name: 'owner', label: '👑 Owner Dashboard', role: 'Owner only' },
+                { name: 'pos', label: '🛒 POS', role: 'All except Owner' },
+                { name: 'products', label: '📦 Products', role: 'All' },
+                { name: 'sales', label: '📊 Sales', role: 'All' },
+                { name: 'customers', label: '👥 Customers', role: 'All' },
+                { name: 'discounts', label: '🏷️ Discounts', role: 'Admin, Manager, Owner' },
+                { name: 'reports', label: '📈 Reports', role: 'All' },
+                { name: 'forecasting', label: '🔮 Forecasting', role: 'Admin, Owner' },
+                { name: 'sync', label: '🔄 Sync', role: 'Admin only' },
+                { name: 'currency', label: '💱 Currency', role: 'Admin, Owner' },
+                { name: 'settings', label: '⚙️ Settings', role: 'Admin, Owner' }
+            ];
+
+            let html = `<h3>Current Role: <strong>${currentRole}</strong></h3>`;
+            html += '<table border="1" cellpadding="10" style="width:100%; border-collapse: collapse;">';
+            html += '<tr><th>Menu Item</th><th>Expected Visibility</th><th>hasMenuAccess()</th><th>Status</th></tr>';
+
+            const visibleMenus = [];
+            const hiddenMenus = [];
+
+            allMenuItems.forEach(item => {
+                const hasAccess = hasMenuAccess(item.name);
+                const status = hasAccess ? '<span class="success">✓ Visible</span>' : '<span class="error">✗ Hidden</span>';
+                
+                html += `<tr>
+                    <td>${item.label}</td>
+                    <td>${item.role}</td>
+                    <td>${hasAccess}</td>
+                    <td>${status}</td>
+                </tr>`;
+
+                if (hasAccess) {
+                    visibleMenus.push(item.label);
+                } else {
+                    hiddenMenus.push(item.label);
+                }
+            });
+
+            html += '</table>';
+
+            resultDiv.innerHTML = html;
+
+            // Menu simulation
+            let simHtml = '<h3>Simulated Menu (as user would see it)</h3>';
+            simHtml += '<div style="background: #2c3e50; color: white; padding: 20px; border-radius: 5px;">';
+            simHtml += '<h4 style="color: #fff;">Matrix POS</h4>';
+            
+            allMenuItems.forEach(item => {
+                if (hasMenuAccess(item.name)) {
+                    simHtml += `<div style="padding: 10px; margin: 5px 0; background: #34495e; border-radius: 3px;">
+                        ${item.label}
+                    </div>`;
+                }
+            });
+
+            simHtml += '</div>';
+            simHtml += `<p><strong>Visible items:</strong> ${visibleMenus.length} / ${allMenuItems.length}</p>`;
+            simHtml += `<p><strong>Hidden items:</strong> ${hiddenMenus.join(', ') || 'None'}</p>`;
+
+            menuSimDiv.innerHTML = simHtml;
+        }
+
+        // Test different roles
+        function testRole(role) {
+            currentRole = role;
+            testMenuLogic();
+        }
+    </script>
+
+    <h2>Quick Role Tests</h2>
+    <button onclick="testRole('owner')">Test as Owner</button>
+    <button onclick="testRole('admin')">Test as Admin</button>
+    <button onclick="testRole('manager')">Test as Manager</button>
+    <button onclick="testRole('cashier')">Test as Cashier</button>
+
+    <hr>
+    <p><em>This page tests the role-based menu system without needing to reload the Angular app.</em></p>
+</body>
+</html>

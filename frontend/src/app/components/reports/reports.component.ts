@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { LocationService } from '../../services/location.service';
+import { Subscription } from 'rxjs';
 
 interface SalesSummary {
   current_period: {
@@ -81,13 +83,17 @@ interface PaymentMethodStats {
   templateUrl: './reports.component.html',
   styleUrls: ['./reports.component.scss']
 })
-export class ReportsComponent implements OnInit {
+export class ReportsComponent implements OnInit, OnDestroy {
   activeTab: string = 'overview';
   
   // Date filters
   startDate: string = '';
   endDate: string = '';
   datePreset: string = 'month';
+  
+  // Location filter
+  selectedLocationId: string | null = null;
+  private locationSubscription?: Subscription;
   
   // Data
   salesSummary: SalesSummary | null = null;
@@ -111,11 +117,27 @@ export class ReportsComponent implements OnInit {
   // Export
   exportingReport: boolean = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private locationService: LocationService
+  ) {}
 
   ngOnInit() {
+    // Subscribe to location changes from header
+    this.locationSubscription = this.locationService.selectedLocation$.subscribe(location => {
+      this.selectedLocationId = location?.id || null;
+      // Reload reports when location changes
+      this.loadAllReports();
+    });
+    
     this.setDatePreset('month');
     this.loadAllReports();
+  }
+  
+  ngOnDestroy() {
+    if (this.locationSubscription) {
+      this.locationSubscription.unsubscribe();
+    }
   }
 
   setDatePreset(preset: string) {

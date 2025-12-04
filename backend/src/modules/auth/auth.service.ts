@@ -18,12 +18,28 @@ export class AuthService {
 
     const secret = process.env.JWT_SECRET || 'change_this_secret';
     const token = jwt.sign(
-      { user_id: user.id, business_id: user.business_id, email: user.email },
+      { 
+        user_id: user.id, 
+        business_id: user.business_id, 
+        location_id: user.location_id,
+        role: user.role,
+        email: user.email 
+      },
       secret,
       { expiresIn: '7d' }
     );
 
-    return { token, user: { id: user.id, name: user.name, email: user.email, business_id: user.business_id } };
+    return { 
+      token, 
+      user: { 
+        id: user.id, 
+        name: user.name, 
+        email: user.email, 
+        business_id: user.business_id, 
+        location_id: user.location_id,
+        role: user.role || 'cashier' 
+      } 
+    };
   }
 
   async signup(name: string, email: string, password: string, businessId?: string) {
@@ -52,12 +68,28 @@ export class AuthService {
     // Generate token
     const secret = process.env.JWT_SECRET || 'change_this_secret';
     const token = jwt.sign(
-      { user_id: user.id, business_id: user.business_id, email: user.email },
+      { 
+        user_id: user.id, 
+        business_id: user.business_id, 
+        location_id: user.location_id,
+        role: user.role,
+        email: user.email 
+      },
       secret,
       { expiresIn: '7d' }
     );
 
-    return { token, user: { id: user.id, name: user.name, email: user.email, business_id: user.business_id } };
+    return { 
+      token, 
+      user: { 
+        id: user.id, 
+        name: user.name, 
+        email: user.email, 
+        business_id: user.business_id, 
+        location_id: user.location_id,
+        role: user.role || 'cashier' 
+      } 
+    };
   }
 
   async hashPassword(password: string) {
