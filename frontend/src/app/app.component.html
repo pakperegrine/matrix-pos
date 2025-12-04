@@ -1,6 +1,6 @@
 <div class="app-shell">
   <!-- Vertical Sidebar -->
-  <aside class="sidebar" *ngIf="showSidebar">
+  <aside class="sidebar" *ngIf="showSidebar && isAuthenticated">
     <div class="sidebar-header">
       <div class="logo-icon">M</div>
       <div class="logo-text">
@@ -92,9 +92,9 @@
   </aside>
 
   <!-- Main Content Area -->
-  <div class="app-main" [class.no-sidebar]="!showSidebar">
+  <div class="app-main" [class.no-sidebar]="!showSidebar || !isAuthenticated">
     <!-- Top Header Bar -->
-    <header class="app-header" *ngIf="showSidebar">
+    <header class="app-header" *ngIf="showSidebar && isAuthenticated">
       <div class="header-content">
         <h2 class="page-title">{{ pageTitle }}</h2>
         <div class="header-actions">
@@ -116,6 +116,14 @@
             </select>
           </div>
           
+          <!-- Shift Status Indicator -->
+          <div class="shift-status" *ngIf="showShiftStatus">
+            <span class="shift-icon" [class.active]="hasActiveShift">💰</span>
+            <span class="shift-label">
+              {{ hasActiveShift ? 'Shift #' + currentShiftNumber : 'No Active Shift' }}
+            </span>
+          </div>
+          
           <app-sync-status></app-sync-status>
           <app-theme-toggle></app-theme-toggle>
           <button class="header-btn" title="Notifications">
@@ -134,7 +142,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="app-footer">
+    <footer class="app-footer" *ngIf="isAuthenticated">
       <div class="footer-content">
         <div class="footer-left">
           <span class="footer-copyright">&copy; 2025 Matrix POS. All rights reserved.</span>
@@ -150,4 +158,7 @@
   
   <!-- Global Toast Notifications -->
   <app-toast></app-toast>
+  
+  <!-- Shift Modal (appears when shift is required) -->
+  <app-shift-modal></app-shift-modal>
 </div>

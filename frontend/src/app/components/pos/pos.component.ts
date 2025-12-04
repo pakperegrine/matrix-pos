@@ -3,6 +3,8 @@ import { DexieService } from '../../services/dexie.service';
 import { SyncService } from '../../services/sync.service';
 import { ToastService } from '../../services/toast.service';
 import { SettingsService } from '../../services/settings.service';
+import { ShiftService } from '../../services/shift.service';
+import { CashManagementService } from '../../services/cash-management.service';
 import { Product } from '../../models/product';
 import { Discount, DiscountResult, DiscountCalculation } from '../../models/discount';
 import { HttpClient } from '@angular/common/http';
@@ -17,6 +19,7 @@ interface CartItem {
 
 @Component({
   selector: 'app-pos',
+  standalone: false,
   templateUrl: './pos.component.html',
   styleUrls: ['./pos.component.scss']
 })
@@ -60,7 +63,9 @@ export class PosComponent implements OnInit {
     private syncService: SyncService,
     private toastService: ToastService,
     private http: HttpClient,
-    public settingsService: SettingsService
+    public settingsService: SettingsService,
+    private shiftService: ShiftService,
+    private cashManagementService: CashManagementService
   ) {}
 
   async ngOnInit() {
@@ -421,8 +426,12 @@ export class PosComponent implements OnInit {
     this.processingCheckout = true;
 
     const temp_invoice_no = `TEMP-${Date.now()}`;
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const locationId = localStorage.getItem('selectedLocationId') || user.location_id;
+    
     const saleData = {
       temp_invoice_no,
+      location_id: locationId,
       customer_name: 'Walk-in Customer',
       customer_id: this.selectedCustomerId || undefined,
       subtotal: this.subtotal,
@@ -443,6 +452,7 @@ export class PosComponent implements OnInit {
       if (this.syncService.isOnline()) {
         // Try to sync immediately
         const payload = {
+          location_id: locationId,
           source: 'offline',
           payment_method: this.paymentMethod,
           items: saleData.items.map(item => ({
@@ -454,6 +464,21 @@ export class PosComponent implements OnInit {
 
         try {
           await this.http.post<any>('http://localhost:3000/api/sync/offline-sale', payload).toPromise();
+          
+          // Record sale to shift if payment is cash and shift is active
+          if (this.paymentMethod === 'cash') {
+            const activeShift = this.shiftService.getActiveShift();
+            if (activeShift) {
+              this.cashManagementService.recordSale({
+                shiftId: activeShift.id,
+                amount: this.total,
+                invoiceId: temp_invoice_no
+              }).subscribe({
+                error: (err) => console.error('Failed to record sale to shift:', err)
+              });
+            }
+          }
+          
           this.toastService.success('Sale completed and synced', 'Success');
         } catch (err) {
           // If sync fails, save for later

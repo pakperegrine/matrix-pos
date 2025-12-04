@@ -7,8 +7,11 @@ export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 
   @Get()
-  async findByBusiness(@Query('businessId') businessId: string): Promise<Settings> {
-    return this.settingsService.findByBusiness(businessId);
+  async findByBusiness(
+    @Query('businessId') businessId: string,
+    @Query('location_id') location_id?: string,
+  ): Promise<Settings> {
+    return this.settingsService.findByBusiness(businessId, location_id);
   }
 
   @Get(':id')

@@ -13,22 +13,25 @@ import { InventoryForecastingComponent } from './components/inventory-forecastin
 import { SettingsComponent } from './components/settings/settings.component';
 import { CashManagementComponent } from './components/cash-management/cash-management.component';
 import { OwnerDashboardComponent } from './components/owner-dashboard/owner-dashboard.component';
+import { AuthGuard } from './guards/auth.guard';
+import { RoleGuard } from './guards/role.guard';
+import { ShiftGuard } from './guards/shift.guard';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
-  { path: 'pos', component: PosComponent },
-  { path: 'products', component: ProductManagementComponent },
-  { path: 'sales', component: SalesDashboardComponent },
-  { path: 'sync', component: PendingTransactionsComponent },
-  { path: 'customers', component: CustomerManagementComponent },
-  { path: 'discounts', component: DiscountManagementComponent },
-  { path: 'reports', component: ReportsComponent },
-  { path: 'currency', component: CurrencySettingsComponent },
-  { path: 'forecasting', component: InventoryForecastingComponent },
-  { path: 'settings', component: SettingsComponent },
-  { path: 'cash-management', component: CashManagementComponent },
-  { path: 'owner', component: OwnerDashboardComponent },
+  { path: '', redirectTo: '/pos', pathMatch: 'full' },
+  { path: 'pos', component: PosComponent, canActivate: [AuthGuard, ShiftGuard], data: { requiresShift: true } },
+  { path: 'products', component: ProductManagementComponent, canActivate: [AuthGuard] },
+  { path: 'sales', component: SalesDashboardComponent, canActivate: [AuthGuard] },
+  { path: 'sync', component: PendingTransactionsComponent, canActivate: [AuthGuard] },
+  { path: 'customers', component: CustomerManagementComponent, canActivate: [AuthGuard] },
+  { path: 'discounts', component: DiscountManagementComponent, canActivate: [AuthGuard] },
+  { path: 'reports', component: ReportsComponent, canActivate: [AuthGuard] },
+  { path: 'currency', component: CurrencySettingsComponent, canActivate: [AuthGuard] },
+  { path: 'forecasting', component: InventoryForecastingComponent, canActivate: [AuthGuard] },
+  { path: 'settings', component: SettingsComponent, canActivate: [RoleGuard], data: { roles: ['owner', 'manager'] } },
+  { path: 'cash-management', component: CashManagementComponent, canActivate: [AuthGuard] },
+  { path: 'owner', component: OwnerDashboardComponent, canActivate: [RoleGuard], data: { roles: ['owner'] } },
   { path: '**', redirectTo: '/login' }
 ];
 

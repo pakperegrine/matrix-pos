@@ -2,7 +2,8 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { SettingsService } from '../services/settings.service';
 
 @Pipe({
-  name: 'customCurrency'
+  name: 'customCurrency',
+  standalone: false
 })
 export class CustomCurrencyPipe implements PipeTransform {
   constructor(private settingsService: SettingsService) {}

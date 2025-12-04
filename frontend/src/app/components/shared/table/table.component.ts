@@ -16,6 +16,7 @@ export interface TableData {
 
 @Component({
   selector: 'app-table',
+  standalone: false,
   templateUrl: './table.component.html',
   styleUrls: ['./table.component.scss']
 })

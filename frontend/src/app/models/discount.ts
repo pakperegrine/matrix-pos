@@ -1,6 +1,7 @@
 export interface Discount {
   id: string;
   business_id: string;
+  location_id?: string;
   name: string;
   code?: string;
   description?: string;

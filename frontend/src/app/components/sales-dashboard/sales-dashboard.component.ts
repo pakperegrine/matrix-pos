@@ -37,6 +37,7 @@ interface RecentTransaction {
 
 @Component({
   selector: 'app-sales-dashboard',
+  standalone: false,
   templateUrl: './sales-dashboard.component.html',
   styleUrls: ['./sales-dashboard.component.scss']
 })
@@ -142,8 +143,8 @@ export class SalesDashboardComponent implements OnInit, OnDestroy {
       
       invoices.forEach(inv => {
         const invDate = new Date(inv.created_at);
-        const sales = inv.total || 0;
-        const profit = inv.total_profit || 0;
+        const sales = parseFloat(String(inv.total || 0)) || 0;
+        const profit = parseFloat(String(inv.total_profit || 0)) || 0;
         
         if (invDate >= monthStart) {
           monthSales += sales;
@@ -159,11 +160,11 @@ export class SalesDashboardComponent implements OnInit, OnDestroy {
       });
       
       this.summary = {
-        todaySales,
-        todayProfit,
+        todaySales: parseFloat(String(todaySales)) || 0,
+        todayProfit: parseFloat(String(todayProfit)) || 0,
         todayTransactions,
-        monthSales,
-        monthProfit,
+        monthSales: parseFloat(String(monthSales)) || 0,
+        monthProfit: parseFloat(String(monthProfit)) || 0,
         monthTransactions
       };
     } catch (error) {
@@ -231,15 +232,20 @@ export class SalesDashboardComponent implements OnInit, OnDestroy {
         }
         
         if (salesMap.has(label)) {
-          salesMap.set(label, (salesMap.get(label) || 0) + (inv.total || 0));
-          profitMap.set(label, (profitMap.get(label) || 0) + (inv.total_profit || 0));
+          const currentSales = salesMap.get(label) || 0;
+          const currentProfit = profitMap.get(label) || 0;
+          const invTotal = parseFloat(String(inv.total || 0)) || 0;
+          const invProfit = parseFloat(String(inv.total_profit || 0)) || 0;
+          
+          salesMap.set(label, currentSales + invTotal);
+          profitMap.set(label, currentProfit + invProfit);
         }
       });
       
       this.chartData = {
         labels,
-        sales: labels.map(l => salesMap.get(l) || 0),
-        profit: labels.map(l => profitMap.get(l) || 0)
+        sales: labels.map(l => parseFloat(String(salesMap.get(l) || 0)) || 0),
+        profit: labels.map(l => parseFloat(String(profitMap.get(l) || 0)) || 0)
       };
     } catch (error) {
       console.error('Failed to load chart data', error);
@@ -284,7 +290,7 @@ export class SalesDashboardComponent implements OnInit, OnDestroy {
         .map(inv => ({
           id: inv.id,
           invoice_no: inv.invoice_no || 'INV-' + inv.id.substring(0, 8),
-          total_amount: inv.total || 0,
+          total_amount: parseFloat(String(inv.total || 0)) || 0,
           payment_method: inv.payment_method || 'cash',
           created_at: inv.created_at,
           item_count: 0 // Would need to join with sale_items
@@ -303,11 +309,15 @@ export class SalesDashboardComponent implements OnInit, OnDestroy {
     this.toastService.info('Export feature coming soon');
   }
 
-  formatCurrency(value: number): string {
+  formatCurrency(value: number | string | null | undefined): string {
+    const numValue = parseFloat(String(value || 0));
+    if (isNaN(numValue)) {
+      return '$0.00';
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
-    }).format(value);
+    }).format(numValue);
   }
 
   formatDate(dateString: string): string {
@@ -322,10 +332,16 @@ export class SalesDashboardComponent implements OnInit, OnDestroy {
   getPolylinePoints(data: number[], width: number, height: number, padding: number): string {
     if (!data || data.length === 0) return '';
     
-    const maxValue = Math.max(...data, 1);
-    const xStep = (width - padding * 2) / (data.length - 1 || 1);
+    // Filter out NaN values and ensure all values are valid numbers
+    const validData = data.map(v => {
+      const num = parseFloat(String(v || 0));
+      return isNaN(num) ? 0 : num;
+    });
     
-    return data.map((value, index) => {
+    const maxValue = Math.max(...validData, 1);
+    const xStep = (width - padding * 2) / (validData.length - 1 || 1);
+    
+    return validData.map((value, index) => {
       const x = padding + index * xStep;
       const y = height - (value / maxValue) * (height - padding * 2);
       return `${x},${y}`;

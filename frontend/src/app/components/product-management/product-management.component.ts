@@ -24,6 +24,7 @@ interface Product {
 
 @Component({
   selector: 'app-product-management',
+  standalone: false,
   templateUrl: './product-management.component.html',
   styleUrls: ['./product-management.component.scss']
 })
@@ -187,6 +188,9 @@ export class ProductManagementComponent implements OnInit, OnDestroy {
 
     this.savingProduct = true;
 
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const locationId = localStorage.getItem('selectedLocationId') || user.location_id;
+
     const productData = {
       name: this.currentProduct.name,
       sku: this.currentProduct.sku,
@@ -198,7 +202,8 @@ export class ProductManagementComponent implements OnInit, OnDestroy {
       track_inventory: this.currentProduct.track_inventory,
       allow_negative_stock: this.currentProduct.allow_negative_stock,
       is_active: this.currentProduct.is_active,
-      scope: this.currentProduct.scope
+      scope: this.currentProduct.scope,
+      location_id: locationId || undefined
     };
 
     const request$ = this.isEditMode

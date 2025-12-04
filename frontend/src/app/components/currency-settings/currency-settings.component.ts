@@ -15,6 +15,7 @@ interface Currency {
 
 @Component({
   selector: 'app-currency-settings',
+  standalone: false,
   templateUrl: './currency-settings.component.html',
   styleUrls: ['./currency-settings.component.scss']
 })

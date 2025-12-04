@@ -11,17 +11,30 @@ export class SettingsService {
     private settingsRepository: Repository<Settings>,
   ) {}
 
-  async findByBusiness(businessId: string): Promise<Settings> {
-    let settings = await this.settingsRepository.findOne({
-      where: { business_id: businessId },
-    });
+  async findByBusiness(businessId: string, location_id?: string): Promise<Settings> {
+    try {
+      const whereClause: any = { business_id: businessId };
+      
+      // If location_id provided, filter by location
+      if (location_id) {
+        whereClause.location_id = location_id;
+      }
+      
+      let settings = await this.settingsRepository.findOne({
+        where: whereClause,
+      });
 
-    // If no settings exist, create default settings
-    if (!settings) {
-      settings = await this.createDefaults(businessId);
+      // If no settings exist, create default settings
+      if (!settings) {
+        settings = await this.createDefaults(businessId, location_id);
+      }
+
+      return settings;
+    } catch (error) {
+      console.error('Error finding settings:', error);
+      // Return default settings if database error
+      return this.createDefaults(businessId, location_id);
     }
-
-    return settings;
   }
 
   async findOne(id: string): Promise<Settings> {
@@ -45,17 +58,22 @@ export class SettingsService {
     return this.findOne(id);
   }
 
-  async resetToDefaults(businessId: string): Promise<Settings> {
+  async resetToDefaults(businessId: string, location_id?: string): Promise<Settings> {
     // Delete existing settings
-    await this.settingsRepository.delete({ business_id: businessId });
+    const whereClause: any = { business_id: businessId };
+    if (location_id) {
+      whereClause.location_id = location_id;
+    }
+    await this.settingsRepository.delete(whereClause);
     // Create new default settings
-    return this.createDefaults(businessId);
+    return this.createDefaults(businessId, location_id);
   }
 
-  private async createDefaults(businessId: string): Promise<Settings> {
+  private async createDefaults(businessId: string, location_id?: string): Promise<Settings> {
     const defaults = this.settingsRepository.create({
       id: uuidv4(),
       business_id: businessId,
+      location_id: location_id || null,
       business_name: 'My Business',
       tax_enabled: 0,
       tax_rate: 0,

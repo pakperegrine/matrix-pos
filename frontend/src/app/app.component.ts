@@ -2,16 +2,20 @@ import { Component, OnInit } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { LocationService, Location } from './services/location.service';
+import { AuthService, User } from './services/auth.service';
+import { ShiftService } from './services/shift.service';
 
 @Component({
   selector: 'app-root',
+  standalone: false,
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
   title = 'Matrix POS';
   pageTitle = 'Point of Sale';
-  showSidebar = true;
+  showSidebar = false;
+  isAuthenticated = false;
   userName = 'Admin';
   userRole = 'Administrator';
   userRoleType: 'owner' | 'admin' | 'manager' | 'cashier' = 'admin';
@@ -20,6 +24,11 @@ export class AppComponent implements OnInit {
   locations: Location[] = [];
   selectedLocation: Location | null = null;
   showLocationSelector = false;
+  
+  // Shift status
+  hasActiveShift = false;
+  currentShiftNumber = '';
+  showShiftStatus = false;
 
   private pageTitles: { [key: string]: string } = {
     '/pos': 'Point of Sale',
@@ -32,21 +41,38 @@ export class AppComponent implements OnInit {
     '/currency': 'Currency Settings',
     '/sync': 'Synchronization',
     '/settings': 'Settings',
-    '/owner': 'Owner Dashboard'
+    '/owner': 'Owner Dashboard',
+    '/cash-management': 'Cash Management'
   };
 
   constructor(
     private router: Router,
-    private locationService: LocationService
+    private locationService: LocationService,
+    private authService: AuthService,
+    private shiftService: ShiftService
   ) {}
 
   ngOnInit(): void {
-    this.loadUserInfo();
+    // Subscribe to authentication state
+    this.authService.currentUser$.subscribe(user => {
+      this.isAuthenticated = !!user;
+      if (user) {
+        this.loadUserInfo(user);
+        this.loadLocations();
+        // Load active shift and check if shift is required
+        this.shiftService.loadActiveShift().subscribe();
+      } else {
+        this.showSidebar = false;
+        this.showLocationSelector = false;
+        this.shiftService.clearShift();
+      }
+    });
     
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: any) => {
-        this.showSidebar = !event.url.includes('/login');
+        const isLoginPage = event.url.includes('/login');
+        this.showSidebar = this.isAuthenticated && !isLoginPage;
         this.pageTitle = this.pageTitles[event.url] || 'Point of Sale';
       });
     
@@ -60,34 +86,34 @@ export class AppComponent implements OnInit {
       this.selectedLocation = location;
     });
     
-    // Load locations after setting up subscriptions
-    this.loadLocations();
+    // Subscribe to shift changes
+    this.shiftService.activeShift$.subscribe(shift => {
+      this.hasActiveShift = !!shift;
+      this.currentShiftNumber = shift?.shiftNumber || '';
+      this.showShiftStatus = this.userRoleType === 'cashier' || this.userRoleType === 'manager';
+    });
   }
 
-  loadUserInfo(): void {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      this.userName = user.name || user.email?.split('@')[0] || 'User';
-      this.userRoleType = user.role || 'admin';
-      
-      // Set display role name
-      const roleNames: { [key: string]: string } = {
-        'owner': 'Business Owner',
-        'admin': 'Administrator',
-        'manager': 'Manager',
-        'cashier': 'Cashier'
-      };
-      this.userRole = roleNames[this.userRoleType] || 'Administrator';
-    }
+  loadUserInfo(user: User): void {
+    this.userName = user.name || user.email?.split('@')[0] || 'User';
+    this.userRoleType = user.role || 'admin';
+    
+    // Set display role name
+    const roleNames: { [key: string]: string } = {
+      'owner': 'Business Owner',
+      'admin': 'Administrator',
+      'manager': 'Manager',
+      'cashier': 'Cashier'
+    };
+    this.userRole = roleNames[this.userRoleType] || 'Administrator';
   }
 
   // Check if user has access to a menu item based on role
   hasMenuAccess(menuItem: string): boolean {
     const rolePermissions: { [key: string]: string[] } = {
       'owner': ['owner', 'reports', 'settings', 'products', 'customers', 'discounts', 'forecasting', 'currency', 'sales'],
-      'admin': ['reports', 'settings', 'products', 'customers', 'discounts', 'forecasting', 'currency', 'sales', 'sync', 'pos'],
-      'manager': ['pos', 'products', 'sales', 'customers', 'discounts', 'reports'],
+      'admin': ['reports', 'products', 'customers', 'discounts', 'forecasting', 'currency', 'sales', 'sync', 'pos'],
+      'manager': ['pos', 'products', 'sales', 'customers', 'discounts', 'reports', 'settings'],
       'cashier': ['pos', 'sales', 'customers']
     };
 
@@ -116,11 +142,9 @@ export class AppComponent implements OnInit {
   }
 
   logout(): void {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('businessId');
-    localStorage.removeItem('selectedLocationId');
+    this.authService.logout();
     this.locationService.clearSelection();
+    this.shiftService.clearShift();
     this.router.navigate(['/login']);
   }
 }

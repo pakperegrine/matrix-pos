@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../entities/user.entity';
-import * as argon2 from 'argon2';
+import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 
 @Injectable()
@@ -10,10 +10,15 @@ export class AuthService {
   constructor(@InjectRepository(User) private users: Repository<User>) {}
 
   async login(email: string, password: string) {
+    console.log('Login attempt:', { email, password: password ? '***' : 'empty' });
     const user = await this.users.findOne({ where: { email } });
+    console.log('User found:', user ? { id: user.id, email: user.email, has_password: !!user.password_hash } : 'null');
+    
     if (!user || !user.password_hash) throw new Error('Invalid credentials');
     
-    const valid = await argon2.verify(user.password_hash, password);
+    const valid = await bcrypt.compare(password, user.password_hash);
+    console.log('Password valid:', valid);
+    
     if (!valid) throw new Error('Invalid credentials');
 
     const secret = process.env.JWT_SECRET || 'change_this_secret';
@@ -52,7 +57,7 @@ export class AuthService {
     if (password.length < 6) throw new Error('Password must be at least 6 characters');
 
     // Create new user
-    const passwordHash = await argon2.hash(password);
+    const passwordHash = await bcrypt.hash(password, 10);
     const business_id = businessId || process.env.DEV_BUSINESS_ID || 'business-1';
     
     const user = this.users.create({
@@ -93,6 +98,6 @@ export class AuthService {
   }
 
   async hashPassword(password: string) {
-    return argon2.hash(password);
+    return bcrypt.hash(password, 10);
   }
 }

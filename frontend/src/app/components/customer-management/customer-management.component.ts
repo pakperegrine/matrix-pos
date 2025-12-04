@@ -8,6 +8,7 @@ import { LocationService } from '../../services/location.service';
 
 @Component({
   selector: 'app-customer-management',
+  standalone: false,
   templateUrl: './customer-management.component.html',
   styleUrls: ['./customer-management.component.scss']
 })
@@ -248,6 +249,19 @@ export class CustomerManagementComponent implements OnInit, OnDestroy {
   }
 
   prepareCustomerData(): Partial<Customer> {
+    // Get location_id from selected location or user's location
+    const userStr = localStorage.getItem('user');
+    let locationId = this.selectedLocationId;
+    
+    if (!locationId && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        locationId = user.location_id || null;
+      } catch (e) {
+        console.error('Failed to parse user data', e);
+      }
+    }
+
     const data: Partial<Customer> = {
       name: this.customerForm.name,
       email: this.customerForm.email || undefined,
@@ -260,7 +274,8 @@ export class CustomerManagementComponent implements OnInit, OnDestroy {
       credit_limit: Number(this.customerForm.credit_limit) || 0,
       discount_percentage: Number(this.customerForm.discount_percentage) || 0,
       notes: this.customerForm.notes || undefined,
-      is_active: this.customerForm.is_active ? 1 : 0
+      is_active: this.customerForm.is_active ? 1 : 0,
+      location_id: locationId || undefined
     };
 
     if (this.customerForm.date_of_birth) {
@@ -306,7 +321,7 @@ export class CustomerManagementComponent implements OnInit, OnDestroy {
     }).format(amount);
   }
 
-  formatDate(date: Date | string | undefined): string {
+  formatDate(date: Date | string | null | undefined): string {
     if (!date) return 'N/A';
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',

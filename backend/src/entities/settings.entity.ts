@@ -8,6 +8,9 @@ export class Settings {
   @Column('varchar', { length: 255 })
   business_id: string;
 
+  @Column('varchar', { length: 36, nullable: true })
+  location_id: string;
+
   // Business Information
   @Column('varchar', { length: 255, nullable: true })
   business_name: string;

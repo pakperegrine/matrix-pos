@@ -28,6 +28,9 @@ export class SaleInvoice {
   @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true, default: 0 })
   discount_amount: number;
 
+  @Column({ type: 'json', nullable: true })
+  applied_discounts: string;
+
   @Column({ nullable: true })
   customer_id: string;
 

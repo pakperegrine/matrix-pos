@@ -5,6 +5,7 @@ import { SyncService, PendingSale } from '../../../services/sync.service';
 
 @Component({
   selector: 'app-pending-transactions',
+  standalone: false,
   templateUrl: './pending-transactions.component.html',
   styleUrls: ['./pending-transactions.component.scss']
 })

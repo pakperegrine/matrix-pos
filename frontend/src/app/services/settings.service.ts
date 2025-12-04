@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Settings } from '../models/settings';
+import { LocationService } from './location.service';
 
 @Injectable({
   providedIn: 'root'
@@ -15,12 +16,28 @@ export class SettingsService {
   // Business ID from localStorage (should come from auth service in production)
   private businessId = 'business-1';
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private locationService: LocationService
+  ) {
     this.loadSettings();
+    
+    // Reload settings when location changes
+    this.locationService.selectedLocation$.subscribe(() => {
+      this.loadSettings();
+    });
   }
 
   loadSettings(): void {
-    this.http.get<Settings>(`${this.apiUrl}?businessId=${this.businessId}`)
+    // Get current location ID
+    const locationId = localStorage.getItem('selectedLocationId');
+    let url = `${this.apiUrl}?businessId=${this.businessId}`;
+    
+    if (locationId) {
+      url += `&location_id=${locationId}`;
+    }
+    
+    this.http.get<Settings>(url)
       .pipe(
         tap(settings => this.settingsSubject.next(settings))
       )
@@ -113,11 +130,19 @@ export class SettingsService {
     return this.settingsSubject.value?.decimal_places || 2;
   }
 
-  formatCurrency(amount: number): string {
+  formatCurrency(amount: number | string | null | undefined): string {
+    // Convert to number and handle edge cases
+    const numAmount = typeof amount === 'number' ? amount : parseFloat(String(amount || 0));
+    
+    // If still not a valid number, return default
+    if (isNaN(numAmount)) {
+      return '$0.00';
+    }
+    
     const settings = this.settingsSubject.value;
-    if (!settings) return `$${amount.toFixed(2)}`;
+    if (!settings) return `$${numAmount.toFixed(2)}`;
 
-    const fixed = amount.toFixed(settings.decimal_places);
+    const fixed = numAmount.toFixed(settings.decimal_places);
     const [whole, decimal] = fixed.split('.');
     
     // Add thousand separator

@@ -1,32 +1,41 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ToastService } from '../../services/toast.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
+  standalone: false,
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   email = '';
   password = '';
   name = '';
   loading = false;
   showPassword = false;
   isSignupMode = false;
+  private returnUrl: string = '/pos';
 
   private apiUrl = 'http://localhost:3000/api';
 
   constructor(
     private http: HttpClient,
     private router: Router,
-    private toastService: ToastService
-  ) {
+    private route: ActivatedRoute,
+    private toastService: ToastService,
+    private authService: AuthService
+  ) {}
+
+  ngOnInit(): void {
+    // Get return url from route parameters or default to '/pos'
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/pos';
+
     // Check if already logged in
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      this.router.navigate(['/pos']);
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate([this.returnUrl]);
     }
   }
 
@@ -54,14 +63,16 @@ export class LoginComponent {
       password: this.password
     }).subscribe({
       next: (response) => {
-        localStorage.setItem('auth_token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
-        localStorage.setItem('businessId', response.user.business_id || 'business-1');
+        // Use AuthService to set authentication
+        this.authService.setAuth(response.token, response.user);
         
         this.toastService.success(`Welcome back, ${response.user.name || response.user.email}!`);
         
-        // Redirect based on role
-        const redirectPath = response.user.role === 'owner' ? '/owner' : '/pos';
+        // Redirect based on role or return URL
+        let redirectPath = this.returnUrl;
+        if (redirectPath === '/pos' && response.user.role === 'owner') {
+          redirectPath = '/owner';
+        }
         this.router.navigate([redirectPath]);
       },
       error: (error) => {
@@ -94,9 +105,8 @@ export class LoginComponent {
       password: this.password
     }).subscribe({
       next: (response) => {
-        localStorage.setItem('auth_token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
-        localStorage.setItem('businessId', response.user.business_id || 'business-1');
+        // Use AuthService to set authentication
+        this.authService.setAuth(response.token, response.user);
         
         this.toastService.success(`Welcome to Matrix POS, ${response.user.name}!`);
         

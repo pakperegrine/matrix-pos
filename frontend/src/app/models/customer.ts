@@ -1,6 +1,7 @@
 export interface Customer {
   id?: string;
   business_id?: string;
+  location_id?: string;
   name: string;
   email?: string;
   phone?: string;

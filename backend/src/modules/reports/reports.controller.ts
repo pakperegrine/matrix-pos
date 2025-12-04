@@ -30,12 +30,14 @@ export class ReportsController {
     @Query('start_date') start_date?: string,
     @Query('end_date') end_date?: string,
     @Query('group_by') group_by?: string,
+    @Query('location_id') location_id?: string,
   ) {
     const businessId = this.getBusinessId(req);
     return this.reportsService.getSalesByPeriod(businessId, {
       start_date,
       end_date,
       group_by: group_by || 'day',
+      location_id,
     });
   }
 

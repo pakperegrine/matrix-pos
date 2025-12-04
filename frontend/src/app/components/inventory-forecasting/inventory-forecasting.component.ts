@@ -31,6 +31,7 @@ interface ReorderSuggestion {
 
 @Component({
   selector: 'app-inventory-forecasting',
+  standalone: false,
   templateUrl: './inventory-forecasting.component.html',
   styleUrls: ['./inventory-forecasting.component.scss']
 })

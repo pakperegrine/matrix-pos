@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges } 
 
 @Component({
   selector: 'app-modal',
+  standalone: false,
   templateUrl: './modal.component.html',
   styleUrls: ['./modal.component.scss']
 })

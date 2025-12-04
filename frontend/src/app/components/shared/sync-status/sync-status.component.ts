@@ -5,6 +5,7 @@ import { SyncService, SyncStatus } from '../../../services/sync.service';
 
 @Component({
   selector: 'app-sync-status',
+  standalone: false,
   templateUrl: './sync-status.component.html',
   styleUrls: ['./sync-status.component.scss']
 })

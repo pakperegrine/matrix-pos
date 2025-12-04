@@ -5,9 +5,11 @@ import { takeUntil } from 'rxjs/operators';
 import { CashManagementService } from '../../services/cash-management.service';
 import { CashShift, ShiftDetails } from '../../models/cash-management.model';
 import { ToastService } from '../../services/toast.service';
+import { ShiftService } from '../../services/shift.service';
 
 @Component({
   selector: 'app-cash-management',
+  standalone: false,
   templateUrl: './cash-management.component.html',
   styleUrls: ['./cash-management.component.scss']
 })
@@ -42,7 +44,8 @@ export class CashManagementComponent implements OnInit, OnDestroy {
   constructor(
     private cashManagementService: CashManagementService,
     private toastService: ToastService,
-    private router: Router
+    private router: Router,
+    private shiftService: ShiftService
   ) {}
 
   ngOnInit(): void {
@@ -66,7 +69,7 @@ export class CashManagementComponent implements OnInit, OnDestroy {
 
   loadActiveShift(): void {
     this.isLoading = true;
-    this.cashManagementService.getActiveShift()
+    this.shiftService.loadActiveShift()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (shift) => {

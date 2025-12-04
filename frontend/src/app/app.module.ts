@@ -28,6 +28,7 @@ import { CashManagementComponent } from './components/cash-management/cash-manag
 import { OwnerDashboardComponent } from './components/owner-dashboard/owner-dashboard.component';
 import { CustomCurrencyPipe } from './pipes/custom-currency.pipe';
 import { LoginComponent } from './components/login/login.component';
+import { ShiftModalComponent } from './components/shared/shift-modal/shift-modal.component';
 
 @NgModule({
   declarations: [
@@ -53,7 +54,8 @@ import { LoginComponent } from './components/login/login.component';
     CashManagementComponent,
     OwnerDashboardComponent,
     CustomCurrencyPipe,
-    LoginComponent
+    LoginComponent,
+    ShiftModalComponent
   ],
   imports: [
     BrowserModule,

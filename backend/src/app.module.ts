@@ -56,8 +56,8 @@ import { JwtTenantMiddleware } from './middleware/jwt-tenant.middleware';
           username: process.env.DB_USERNAME || 'root',
           password: process.env.DB_PASSWORD || '',
           database: process.env.DB_DATABASE || 'matrix_pos',
-          synchronize: true,  // Enabled to create schema from entities
-          logging: false,
+          synchronize: false,  // Disabled - using manual migrations
+          logging: true,  // Enable to debug queries
           entities: [User, Business, Product, StockBatch, SaleInvoice, SaleItem, Customer, Discount, Currency, StockForecast, Settings, CashShift, CashMovement, DrawerEvent, Location, UserSession, BusinessStatistic]
           } as any;
       }

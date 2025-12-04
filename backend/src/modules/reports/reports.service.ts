@@ -106,35 +106,36 @@ export class ReportsService {
 
   async getSalesByPeriod(
     businessId: string,
-    options: DateRange & { group_by: string },
+    options: DateRange & { group_by: string; location_id?: string },
   ) {
-    const { start_date, end_date, group_by } = options;
+    const { start_date, end_date, group_by, location_id } = options;
 
+    // MySQL date formatting
     let dateFormat: string;
     switch (group_by) {
       case 'hour':
-        dateFormat = '%Y-%m-%d %H:00:00';
+        dateFormat = "DATE_FORMAT(invoice.created_at, '%Y-%m-%d %H:00:00')";
         break;
       case 'day':
-        dateFormat = '%Y-%m-%d';
+        dateFormat = "DATE_FORMAT(invoice.created_at, '%Y-%m-%d')";
         break;
       case 'week':
-        dateFormat = '%Y-%W';
+        dateFormat = "DATE_FORMAT(invoice.created_at, '%Y-%u')";
         break;
       case 'month':
-        dateFormat = '%Y-%m';
+        dateFormat = "DATE_FORMAT(invoice.created_at, '%Y-%m')";
         break;
       case 'year':
-        dateFormat = '%Y';
+        dateFormat = "DATE_FORMAT(invoice.created_at, '%Y')";
         break;
       default:
-        dateFormat = '%Y-%m-%d';
+        dateFormat = "DATE_FORMAT(invoice.created_at, '%Y-%m-%d')";
     }
 
     const query = this.saleInvoiceRepository
       .createQueryBuilder('invoice')
       .select([
-        `strftime('${dateFormat}', invoice.created_at) as period`,
+        `${dateFormat} as period`,
         'COUNT(*) as invoice_count',
         'SUM(invoice.total) as total_revenue',
         'SUM(invoice.discount_amount) as total_discount',
@@ -143,6 +144,10 @@ export class ReportsService {
       .where('invoice.business_id = :businessId', { businessId })
       .groupBy('period')
       .orderBy('period', 'ASC');
+
+    if (location_id) {
+      query.andWhere('invoice.location_id = :location_id', { location_id });
+    }
 
     if (start_date) {
       query.andWhere('invoice.created_at >= :start_date', { start_date });

@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryColumn, Index, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryColumn, Index, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
 import { SaleInvoice } from './sale-invoice.entity';
 import { Product } from './product.entity';
 
@@ -37,4 +37,7 @@ export class SaleItem {
 
   @Column({ type: 'decimal', precision: 12, scale: 4, nullable: true })
   profit: number;
+
+  @CreateDateColumn()
+  created_at: Date;
 }

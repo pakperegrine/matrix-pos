@@ -8,6 +8,7 @@ interface CartItem {
 
 @Component({
   selector: 'app-cart-panel',
+  standalone: false,
   templateUrl: './cart-panel.component.html',
   styleUrls: ['./cart-panel.component.scss']
 })

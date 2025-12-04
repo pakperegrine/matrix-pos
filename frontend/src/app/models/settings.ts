@@ -1,6 +1,7 @@
 export interface Settings {
   id: string;
   business_id: string;
+  location_id?: string;
 
   // Business Information
   business_name: string;

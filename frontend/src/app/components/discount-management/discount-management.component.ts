@@ -3,11 +3,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Discount, BulkTier } from '../../models/discount';
 import { LocationService } from '../../services/location.service';
+import { ToastService } from '../../services/toast.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-discount-management',
+  standalone: false,
   templateUrl: './discount-management.component.html',
   styleUrls: ['./discount-management.component.scss']
 })
@@ -66,7 +68,8 @@ export class DiscountManagementComponent implements OnInit, OnDestroy {
 
   constructor(
     private http: HttpClient,
-    private locationService: LocationService
+    private locationService: LocationService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -106,7 +109,11 @@ export class DiscountManagementComponent implements OnInit, OnDestroy {
           this.discounts = response.discounts;
           this.applyFilters();
         },
-        error: (error) => console.error('Error loading discounts:', error)
+        error: (error) => {
+          console.error('Error loading discounts:', error);
+          const errorMessage = error.error?.message || 'Failed to load discounts';
+          this.toastService.error(errorMessage, 'Error');
+        }
       });
   }
 
@@ -187,6 +194,15 @@ export class DiscountManagementComponent implements OnInit, OnDestroy {
     // Prepare discount data
     const discountData = { ...this.currentDiscount };
     
+    // Add location_id if creating new discount
+    if (!this.editMode) {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const locationId = localStorage.getItem('selectedLocationId') || user.location_id;
+      if (locationId) {
+        discountData.location_id = locationId;
+      }
+    }
+    
     // Add bulk tiers if bulk discount
     if (discountData.discount_type === 'bulk_discount') {
       discountData.bulk_tiers = this.bulkTiers;
@@ -196,19 +212,29 @@ export class DiscountManagementComponent implements OnInit, OnDestroy {
       this.http.put<Discount>(`${this.apiUrl}/${discountData.id}`, discountData, { headers: this.getHeaders() })
         .subscribe({
           next: () => {
+            this.toastService.success('Discount updated successfully', 'Success');
             this.loadDiscounts();
             this.closeModal();
           },
-          error: (error) => console.error('Error updating discount:', error)
+          error: (error) => {
+            console.error('Error updating discount:', error);
+            const errorMessage = error.error?.message || 'Failed to update discount';
+            this.toastService.error(errorMessage, 'Error');
+          }
         });
     } else {
       this.http.post<Discount>(this.apiUrl, discountData, { headers: this.getHeaders() })
         .subscribe({
           next: () => {
+            this.toastService.success('Discount created successfully', 'Success');
             this.loadDiscounts();
             this.closeModal();
           },
-          error: (error) => console.error('Error creating discount:', error)
+          error: (error) => {
+            console.error('Error creating discount:', error);
+            const errorMessage = error.error?.message || 'Failed to create discount';
+            this.toastService.error(errorMessage, 'Error');
+          }
         });
     }
   }
@@ -217,18 +243,33 @@ export class DiscountManagementComponent implements OnInit, OnDestroy {
     if (confirm('Are you sure you want to delete this discount?')) {
       this.http.delete(`${this.apiUrl}/${id}`, { headers: this.getHeaders() })
         .subscribe({
-          next: () => this.loadDiscounts(),
-          error: (error) => console.error('Error deleting discount:', error)
+          next: () => {
+            this.toastService.success('Discount deleted successfully', 'Success');
+            this.loadDiscounts();
+          },
+          error: (error) => {
+            console.error('Error deleting discount:', error);
+            const errorMessage = error.error?.message || 'Failed to delete discount';
+            this.toastService.error(errorMessage, 'Error');
+          }
         });
     }
   }
 
   toggleStatus(discount: Discount): void {
     const updatedDiscount = { ...discount, is_active: !discount.is_active };
+    const action = updatedDiscount.is_active ? 'activated' : 'deactivated';
     this.http.put(`${this.apiUrl}/${discount.id}`, updatedDiscount, { headers: this.getHeaders() })
       .subscribe({
-        next: () => this.loadDiscounts(),
-        error: (error) => console.error('Error toggling status:', error)
+        next: () => {
+          this.toastService.success(`Discount ${action} successfully`, 'Success');
+          this.loadDiscounts();
+        },
+        error: (error) => {
+          console.error('Error toggling status:', error);
+          const errorMessage = error.error?.message || 'Failed to update discount status';
+          this.toastService.error(errorMessage, 'Error');
+        }
       });
   }
 

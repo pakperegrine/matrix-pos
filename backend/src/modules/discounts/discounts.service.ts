@@ -105,13 +105,28 @@ export class DiscountsService {
     // Validate discount data
     this.validateDiscountData(discountData);
 
-    // Check for duplicate coupon code
+    // Check for duplicate coupon code within the same location
     if (discountData.code) {
+      const whereCondition: any = {
+        business_id: businessId,
+        code: discountData.code,
+      };
+      
+      // If location_id is provided, check uniqueness per location
+      if (discountData.location_id) {
+        whereCondition.location_id = discountData.location_id;
+      }
+      
       const existing = await this.discountRepository.findOne({
-        where: { business_id: businessId, code: discountData.code },
+        where: whereCondition,
       });
+      
       if (existing) {
-        throw new BadRequestException('Coupon code already exists');
+        if (discountData.location_id) {
+          throw new BadRequestException('Coupon code already exists in this location');
+        } else {
+          throw new BadRequestException('Coupon code already exists');
+        }
       }
     }
 
@@ -135,11 +150,27 @@ export class DiscountsService {
 
     // Check coupon code uniqueness if changing
     if (discountData.code && discountData.code !== discount.code) {
+      const whereCondition: any = {
+        business_id: businessId,
+        code: discountData.code,
+      };
+      
+      // If location_id is provided or exists on discount, check uniqueness per location
+      const locationId = discountData.location_id || discount.location_id;
+      if (locationId) {
+        whereCondition.location_id = locationId;
+      }
+      
       const existing = await this.discountRepository.findOne({
-        where: { business_id: businessId, code: discountData.code },
+        where: whereCondition,
       });
+      
       if (existing && existing.id !== id) {
-        throw new BadRequestException('Coupon code already exists');
+        if (locationId) {
+          throw new BadRequestException('Coupon code already exists in this location');
+        } else {
+          throw new BadRequestException('Coupon code already exists');
+        }
       }
     }
 
